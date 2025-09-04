@@ -17,7 +17,17 @@ class ClienteController extends Controller
 
     public function store(ClienteStoreRequest $request)
     {
-        Cliente::create($request->validated());
+        // Generar código único basado en el último ID
+        $ultimoId = Cliente::max('id') ?? 0;
+        $codigoGenerado = 'CL-' . str_pad($ultimoId + 1, 4, '0', STR_PAD_LEFT);
+
+        // Combinar datos validados con el código generado
+        $data = $request->validated();
+        $data['codigo'] = $codigoGenerado;
+
+        // Crear cliente
+        Cliente::create($data);
+
         return redirect()->route('clientes.index')->with('success', 'Cliente creado correctamente.');
     }
 
