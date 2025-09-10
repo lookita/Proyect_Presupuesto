@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\DashboardController;
 
 //PAGINA PRINCIPAL
 Route::get('/', function () {
@@ -10,10 +11,8 @@ Route::get('/', function () {
 });
 
 //DASHBOARD (REQUIERE AUTENTICACION Y VERIFICACION))
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])->name('dashboard');
 
 //RUTAS PROTEGIDAS POR AUTENTICACION 
 Route::middleware('auth')->group(function () {
