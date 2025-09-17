@@ -1,5 +1,4 @@
 import './bootstrap';
-import './productos.js';
 
 import Alpine from 'alpinejs';
 
