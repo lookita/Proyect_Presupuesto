@@ -1,11 +1,9 @@
-<?php
-
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\DashboardController;
 
-//PAGINA PRINCIPAL
+// PAGINA PRINCIPAL
 Route::get('/', function () {
     return view('welcome');
 });
@@ -17,37 +15,18 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 //RUTAS PROTEGIDAS POR AUTENTICACION 
 Route::middleware('auth')->group(function () {
 
-    //PERFIL DE USUARIO
+    // PERFIL DE USUARIO
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
 
-
-
-//CRUD DE CLIENTES
-Route::resource('clientes', ClienteController::class);
-
-
-require __DIR__.'/auth.php';
-
-
-//FRANCOO
-/*
-Configuración de rutas para ClienteController
-
-
-Ya están listos el modelo Cliente y el request ClienteStoreRequest.
-
-Registrar las rutas en routes/web.php usando:
+    // CRUD DE CLIENTES
     Route::resource('clientes', ClienteController::class);
 
-Esto habilita: index, create, store, edit, update, destroy.
+    // PRESUPUESTOS
+    Route::get('/presupuestos', [PresupuestoController::class, 'index'])->name('presupuestos.index');
+    Route::get('/presupuestos/create', [PresupuestoController::class, 'create'])->name('presupuestos.create');
+    Route::post('/presupuestos', [PresupuestoController::class, 'store'])->name('presupuestos.store');
+});
 
-Si no se usa show():
-    Route::resource('clientes', ClienteController::class)->except(['show']);
-
-Acordate de incluirlo dentro del grupo protegido por auth.
-
-Avísame cuando esté listo así seguimos con la integración de vistas y validaciones.
-*/
+require __DIR__.'/auth.php';
