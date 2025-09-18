@@ -1,6 +1,6 @@
 use App\Models\Cliente;
 use Illuminate\Http\Request;
-use App\Http\Requests\ClienteStoreRequest;
+use App\Http\Requests\ClienteStoreRequest; // Día 13: uso de FormRequest para validaciones centralizadas
 
 class ClienteController extends Controller
 {
@@ -15,6 +15,9 @@ class ClienteController extends Controller
         return view('clientes.create');
     }
 
+    /**
+     * Día 13: validación centralizada con ClienteStoreRequest
+     */
     public function store(ClienteStoreRequest $request)
     {
         // Generar código único basado en el último ID
@@ -36,6 +39,9 @@ class ClienteController extends Controller
         return view('clientes.edit', compact('cliente'));
     }
 
+    /**
+     * Día 13: validación centralizada con ClienteStoreRequest
+     */
     public function update(ClienteStoreRequest $request, Cliente $cliente)
     {
         $cliente->update($request->validated());

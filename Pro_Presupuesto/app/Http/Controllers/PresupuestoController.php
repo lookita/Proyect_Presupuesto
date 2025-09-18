@@ -11,10 +11,17 @@ class PresupuestoController extends Controller
 {
     /**
      * Día 10: eager loading de cliente y productos en detalles
+     * Día 12: filtro por estado en presupuestos
      */
-    public function index()
+    public function index(Request $request)
     {
-        $presupuestos = Presupuesto::with(['cliente', 'detalles.producto'])->get();
+        $query = Presupuesto::with(['cliente', 'detalles.producto']); // Día 10: eager loading
+
+        if ($request->filled('estado')) {
+            $query->where('estado', $request->estado); // Día 12: filtro por estado
+        }
+
+        $presupuestos = $query->get();
 
         return view('presupuestos.index', compact('presupuestos'));
     }

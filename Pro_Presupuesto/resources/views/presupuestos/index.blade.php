@@ -19,6 +19,17 @@
             @if(request()->routeIs('presupuestos.index'))
                 {{-- Contenido de la pestaña "Historial de Presupuestos" --}}
                 <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
+
+                    <!-- Día 12: dropdown para filtrar por estado -->
+                    <form method="GET" action="{{ route('presupuestos.index') }}" class="mb-6">
+                        <label for="estado" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por estado:</label>
+                        <select name="estado" id="estado" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">-- Todos --</option>
+                            <option value="pendiente" {{ request('estado') == 'pendiente' ? 'selected' : '' }}>Pendiente</option>
+                            <option value="facturado" {{ request('estado') == 'facturado' ? 'selected' : '' }}>Facturado</option>
+                        </select>
+                    </form>
+
                     @if(count($presupuestos) > 0)
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">

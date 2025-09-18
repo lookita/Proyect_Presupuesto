@@ -1,8 +1,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Producto;
-use App\Http\Requests\ProductoStoreRequest;
-use App\Http\Requests\ProductoUpdateRequest;
+use App\Http\Requests\ProductoStoreRequest; // Día 13: validación centralizada para creación
+use App\Http\Requests\ProductoUpdateRequest; // Día 13: validación centralizada para edición
 
 class ProductoController extends Controller
 {
@@ -17,6 +17,9 @@ class ProductoController extends Controller
         return view('productos.create');
     }
 
+    /**
+     * Día 13: validación centralizada con ProductoStoreRequest
+     */
     public function store(ProductoStoreRequest $request)
     {
         Producto::create($request->validated());
@@ -28,6 +31,9 @@ class ProductoController extends Controller
         return view('productos.edit', compact('producto'));
     }
 
+    /**
+     * Día 13: validación centralizada con ProductoUpdateRequest
+     */
     public function update(ProductoUpdateRequest $request, Producto $producto)
     {
         $producto->update($request->validated());
