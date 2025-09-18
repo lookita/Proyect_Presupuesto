@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('cliente_id')->constrained()->onDelete('cascade');
             $table->date('fecha');
             $table->string('estado')->default('pendiente');
-            $table->decimal('total', 10, 2)->after('estado')->default(0);
+            $table->decimal('total', 10, 2)->default(0); // agregado en Día 8 para lógica de totales
             $table->timestamps();
         });
     }

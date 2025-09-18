@@ -17,8 +17,8 @@ return new class extends Migration
             $table->foreignId('producto_id')->constrained()->onDelete('cascade');
             $table->integer('cantidad');
             $table->decimal('precio_unitario', 10, 2);
-            $table->decimal('descuento_aplicado', 5, 2)->nullable(); // Ej: 10.00 para 10%
-            $table->decimal('subtotal', 10, 2);
+            $table->decimal('descuento_aplicado', 5, 2)->nullable(); // agregado en Día 8 para lógica de descuentos por producto
+            $table->decimal('subtotal', 10, 2); // agregado en Día 8 para cálculo de totales por ítem
             $table->timestamps();
         });
     }
