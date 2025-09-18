@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role', // Día 11: campo agregado para asignación masiva
     ];
 
     /**
