@@ -16,6 +16,7 @@ new class extends Component
     }
 }; ?>
 
+<!-- Día 14: navbar con enlaces dinámicos según rol -->
 <nav x-data="{ open: false }" class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -33,6 +34,20 @@ new class extends Component
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </x-nav-link>
+
+                    @auth
+                        @if(auth()->user()->role === 'admin')
+                            <x-nav-link :href="route('clientes.index')" :active="request()->routeIs('clientes.*')" wire:navigate>
+                                {{ __('Clientes') }}
+                            </x-nav-link>
+                            <x-nav-link :href="route('productos.index')" :active="request()->routeIs('productos.*')" wire:navigate>
+                                {{ __('Productos') }}
+                            </x-nav-link>
+                        @endif
+                        <x-nav-link :href="route('presupuestos.index')" :active="request()->routeIs('presupuestos.*')" wire:navigate>
+                            {{ __('Presupuestos') }}
+                        </x-nav-link>
+                    @endauth
                 </div>
             </div>
 
@@ -84,6 +99,20 @@ new class extends Component
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+
+            @auth
+                @if(auth()->user()->role === 'admin')
+                    <x-responsive-nav-link :href="route('clientes.index')" :active="request()->routeIs('clientes.*')" wire:navigate>
+                        {{ __('Clientes') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('productos.index')" :active="request()->routeIs('productos.*')" wire:navigate>
+                        {{ __('Productos') }}
+                    </x-responsive-nav-link>
+                @endif
+                <x-responsive-nav-link :href="route('presupuestos.index')" :active="request()->routeIs('presupuestos.*')" wire:navigate>
+                    {{ __('Presupuestos') }}
+                </x-responsive-nav-link>
+            @endauth
         </div>
 
         <!-- Responsive Settings Options -->

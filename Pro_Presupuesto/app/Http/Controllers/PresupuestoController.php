@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Presupuesto;
 use App\Models\Cliente;
 use App\Models\Producto;
+use App\Services\PresupuestoService; // Día 14: servicio compartido para cálculo de total
 
 class PresupuestoController extends Controller
 {
@@ -33,28 +34,28 @@ class PresupuestoController extends Controller
         return view('presupuestos.create', compact('clientes', 'productos'));
     }
 
-    public function store(Request $request)
+    /**
+     * Día 8: cálculo de total y uso de addItem() para lógica flexible
+     * Día 14: uso de PresupuestoService para cálculo reutilizable
+     */
+    public function store(Request $request, PresupuestoService $presupuestoService)
     {
-        // Día 8: cálculo de total y uso de addItem() para lógica flexible
         $presupuesto = Presupuesto::create([
             'cliente_id' => $request->cliente_id,
             'fecha' => $request->fecha,
             'estado' => 'pendiente',
         ]);
 
-        $total = 0;
-
         foreach ($request->detalles as $detalle) {
-            $item = $presupuesto->addItem(
+            $presupuesto->addItem(
                 $detalle['producto_id'],
                 $detalle['cantidad'],
                 $detalle['precio_unitario'],
                 $detalle['descuento_aplicado'] ?? 0
             );
-
-            $total += $item->subtotal;
         }
 
+        $total = $presupuestoService->calcularTotal($presupuesto); // Día 14: lógica delegada al servicio
         $presupuesto->update(['total' => $total]);
 
         return redirect()->route('presupuestos.index')->with('success', 'Presupuesto creado correctamente.');

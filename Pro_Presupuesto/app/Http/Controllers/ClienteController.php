@@ -1,6 +1,7 @@
 use App\Models\Cliente;
 use Illuminate\Http\Request;
 use App\Http\Requests\ClienteStoreRequest; // Día 13: uso de FormRequest para validaciones centralizadas
+use App\Services\ClienteService; // Día 14: servicio compartido para generación de código
 
 class ClienteController extends Controller
 {
@@ -17,18 +18,13 @@ class ClienteController extends Controller
 
     /**
      * Día 13: validación centralizada con ClienteStoreRequest
+     * Día 14: uso de ClienteService para generar código único
      */
-    public function store(ClienteStoreRequest $request)
+    public function store(ClienteStoreRequest $request, ClienteService $clienteService)
     {
-        // Generar código único basado en el último ID
-        $ultimoId = Cliente::max('id') ?? 0;
-        $codigoGenerado = 'CL-' . str_pad($ultimoId + 1, 4, '0', STR_PAD_LEFT);
-
-        // Combinar datos validados con el código generado
         $data = $request->validated();
-        $data['codigo'] = $codigoGenerado;
+        $data['codigo'] = $clienteService->generarCodigo(); // Día 14: lógica delegada al servicio
 
-        // Crear cliente
         Cliente::create($data);
 
         return redirect()->route('clientes.index')->with('success', 'Cliente creado correctamente.');
