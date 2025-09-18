@@ -9,6 +9,16 @@ use App\Models\Producto;
 
 class PresupuestoController extends Controller
 {
+    /**
+     * Día 10: eager loading de cliente y productos en detalles
+     */
+    public function index()
+    {
+        $presupuestos = Presupuesto::with(['cliente', 'detalles.producto'])->get();
+
+        return view('presupuestos.index', compact('presupuestos'));
+    }
+
     public function create()
     {
         $clientes = Cliente::all();
@@ -18,12 +28,11 @@ class PresupuestoController extends Controller
 
     public function store(Request $request)
     {
-        //dia 8: calculo de total y uso de addItem() para logica flexible
+        // Día 8: cálculo de total y uso de addItem() para lógica flexible
         $presupuesto = Presupuesto::create([
             'cliente_id' => $request->cliente_id,
             'fecha' => $request->fecha,
             'estado' => 'pendiente',
-
         ]);
 
         $total = 0;
@@ -42,5 +51,21 @@ class PresupuestoController extends Controller
         $presupuesto->update(['total' => $total]);
 
         return redirect()->route('presupuestos.index')->with('success', 'Presupuesto creado correctamente.');
+    }
+
+    /**
+     * Día 9: acción PATCH para cambiar estado del presupuesto con validación
+     */
+    public function actualizarEstado(Request $request, Presupuesto $presupuesto)
+    {
+        $request->validate([
+            'estado' => 'required|in:pendiente,facturado',
+        ]);
+
+        $presupuesto->update([
+            'estado' => $request->estado,
+        ]);
+
+        return redirect()->route('presupuestos.index')->with('success', 'Estado actualizado correctamente.');
     }
 }

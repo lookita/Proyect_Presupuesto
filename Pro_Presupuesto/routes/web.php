@@ -26,6 +26,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/presupuestos', [PresupuestoController::class, 'index'])->name('presupuestos.index');
     Route::get('/presupuestos/create', [PresupuestoController::class, 'create'])->name('presupuestos.create');
     Route::post('/presupuestos', [PresupuestoController::class, 'store'])->name('presupuestos.store');
+    Route::patch('/presupuestos/{presupuesto}/estado', [PresupuestoController::class, 'actualizarEstado'])->name('presupuestos.actualizarEstado');
 });
 
 require __DIR__.'/auth.php';
