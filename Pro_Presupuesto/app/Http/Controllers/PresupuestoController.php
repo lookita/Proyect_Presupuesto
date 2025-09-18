@@ -18,10 +18,12 @@ class PresupuestoController extends Controller
 
     public function store(Request $request)
     {
+        //dia 8: calculo de total y uso de addItem() para logica flexible
         $presupuesto = Presupuesto::create([
             'cliente_id' => $request->cliente_id,
             'fecha' => $request->fecha,
             'estado' => 'pendiente',
+
         ]);
 
         $total = 0;
