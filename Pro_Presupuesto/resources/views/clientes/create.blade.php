@@ -1,5 +1,8 @@
+@extends('layout.app')
+
 <!DOCTYPE html>
 <html lang="es">
+    @section (content)
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +10,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-8">
+    @csrf
     <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
         <h1 class="text-2xl font-bold mb-6 text-center">Crear Nuevo Cliente</h1>
 
@@ -40,6 +44,7 @@
             </div>
         </form>
     </div>
+    @endsection
 </body>
 </html>
 
