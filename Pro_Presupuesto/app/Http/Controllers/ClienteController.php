@@ -1,3 +1,5 @@
+<?php
+
 use App\Models\Cliente;
 use Illuminate\Http\Request;
 use App\Http\Requests\ClienteStoreRequest; // Día 13: uso de FormRequest para validaciones centralizadas
@@ -20,8 +22,12 @@ class ClienteController extends Controller
      * Día 13: validación centralizada con ClienteStoreRequest
      * Día 14: uso de ClienteService para generar código único
      */
-    public function store(ClienteStoreRequest $request, ClienteService $clienteService)
-    {
+    public function store(ClienteStoreRequest $request, ClienteService $clienteService) /**Dia 14 de validaciones de store */
+    { 
+        $validated = $request->validate([
+        'nombre' => 'required|string|max:100',
+        'email'  => 'required|email|unique:clientes,email',
+    ]);
         $data = $request->validated();
         $data['codigo'] = $clienteService->generarCodigo(); // Día 14: lógica delegada al servicio
 
@@ -38,8 +44,12 @@ class ClienteController extends Controller
     /**
      * Día 13: validación centralizada con ClienteStoreRequest
      */
-    public function update(ClienteStoreRequest $request, Cliente $cliente)
+    public function update(ClienteStoreRequest $request, Cliente $cliente) /**dia 14 de validaciones de update, tarea de fran */
     {
+        $validated = $request->validate([
+        'nombre' => 'required|string|max:100',
+        'email'  => 'required|email|unique:clientes,email,' . $cliente->id,
+    ]);
         $cliente->update($request->validated());
         return redirect()->route('clientes.index')->with('success', 'Cliente actualizado.');
     }
@@ -48,5 +58,6 @@ class ClienteController extends Controller
     {
         $cliente->delete();
         return redirect()->route('clientes.index')->with('success', 'Cliente eliminado.');
+
     }
 }

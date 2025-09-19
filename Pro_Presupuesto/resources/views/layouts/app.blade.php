@@ -27,6 +27,23 @@
                 </header>
             @endif
 
+            <!-- Día 15 de mensaje flash -->
+            @if(session('success'))
+                <div class="max-w-7xl mx-auto mt-4">
+                    <div class="bg-green-500 text-white p-3 rounded-md shadow">
+                        {{ session('success') }}
+                    </div>
+                </div>
+            @endif
+            
+            @if(session('error'))
+                <div class="max-w-7xl mx-auto mt-4">
+                    <div class="bg-red-500 text-white p-3 rounded-md shadow">
+                        {{ session('error') }}
+                    </div>
+                </div>
+            @endif
+
             <!-- Page Content -->
             <main>
                 {{ $slot }}

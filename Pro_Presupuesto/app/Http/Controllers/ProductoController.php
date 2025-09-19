@@ -1,3 +1,4 @@
+<?php
 namespace App\Http\Controllers;
 
 use App\Models\Producto;
@@ -22,6 +23,12 @@ class ProductoController extends Controller
      */
     public function store(ProductoStoreRequest $request)
     {
+          /** Validaciones Día 14 */
+        $validated = $request->validate([
+            'nombre'     => 'required|string|max:100',
+            'precio'     => 'required|numeric|min:0',
+            'stock'      => 'required|integer|min:0',
+        ]);
         Producto::create($request->validated());
         return redirect()->route('productos.index')->with('success', 'Producto creado correctamente.');
     }
@@ -36,6 +43,12 @@ class ProductoController extends Controller
      */
     public function update(ProductoUpdateRequest $request, Producto $producto)
     {
+        /** Validaciones Día 14 */
+        $validated = $request->validate([
+            'nombre'     => 'required|string|max:100',
+            'precio'     => 'required|numeric|min:0',
+            'stock'      => 'required|integer|min:0',
+        ]);
         $producto->update($request->validated());
         return redirect()->route('productos.index')->with('success', 'Producto actualizado.');
     }

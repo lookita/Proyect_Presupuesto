@@ -76,4 +76,18 @@ class PresupuestoController extends Controller
 
         return redirect()->route('presupuestos.index')->with('success', 'Estado actualizado correctamente.');
     }
+
+    public function update(Request $request, Presupuesto $presupuesto)
+    {
+        // Validaciones Día 14
+        $validated = $request->validate([
+            'cliente_id' => 'required|exists:clientes,id',
+            'fecha'      => 'required|date',
+            'total'      => 'required|numeric|min:0',
+        ]);
+
+        $presupuesto->update($validated);
+
+        return redirect()->route('presupuestos.index')->with('success', 'Presupuesto actualizado correctamente.');
+    }
 }
