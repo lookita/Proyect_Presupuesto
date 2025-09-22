@@ -53,3 +53,116 @@ php artisan migrate --seed
 
 5. Iniciar servidor:
 php artisan serve
+
+
+<!-- Día 17 — Documentación técnica completa -->
+🧩 1. Modelos y relaciones
+📦 User
+Campos: id, name, email, password, role, created_at, updated_at
+
+Relaciones:
+
+hasMany(Presupuesto) ← si se asocia presupuestos al usuario (opcional)
+
+Rol en el sistema:
+
+Controla acceso mediante auth() y auth()->user()->role
+
+Determina qué enlaces se muestran en la navbar (Día 14)
+
+Protege rutas con middleware (Día 17)
+
+Campo role agregado en el Día 11 (admin o user)
+
+📦 Cliente
+Campos: id, nombre, email, codigo, created_at, updated_at
+
+Relaciones:
+
+hasMany(Presupuesto)
+
+📦 Producto
+Campos: id, nombre, precio, codigo, created_at, updated_at
+
+Relaciones:
+
+hasMany(PresupuestoDetalle)
+
+📦 Presupuesto
+Campos: id, cliente_id, fecha, estado, total, created_at, updated_at
+
+Relaciones:
+
+belongsTo(Cliente)
+
+hasMany(PresupuestoDetalle)
+
+Método addItem() para agregar detalles
+
+📦 PresupuestoDetalle
+Campos: id, presupuesto_id, producto_id, cantidad, precio_unitario, descuento_aplicado, subtotal
+
+Relaciones:
+
+belongsTo(Presupuesto)
+
+belongsTo(Producto)
+
+📊 Diagrama de relaciones
+Código
+User ──┐
+       │
+Cliente ───< Presupuesto ───< PresupuestoDetalle >─── Producto
+User controla acceso y navegación
+
+Cliente tiene muchos Presupuestos
+
+Cada Presupuesto tiene muchos Detalles
+
+Cada Detalle pertenece a un Producto
+
+🧠 2. Controladores y servicios
+🧾 Controladores
+ClienteController: CRUD de clientes, usa ClienteService para generar código (Día 14)
+
+ProductoController: CRUD de productos, validación con FormRequest (Día 13)
+
+PresupuestoController: CRUD de presupuestos, usa PresupuestoService para calcular total (Día 14)
+
+AuthController: login, logout, registro (si está presente)
+
+📦 Servicios
+ClienteService: método generarCodigo() para crear códigos únicos (Día 14)
+
+PresupuestoService: método calcularTotal() para sumar subtotales (Día 14)
+
+📊 Diagrama de flujo de servicios
+Código
+ClienteController ──> ClienteService ──> Código generado
+PresupuestoController ──> PresupuestoService ──> Total calculado
+🌐 3. Rutas y middleware
+📄 routes/web.php
+Route::resource('clientes', ClienteController::class)
+
+Route::resource('productos', ProductoController::class)
+
+Route::resource('presupuestos', PresupuestoController::class)
+
+Route::patch('presupuestos/{presupuesto}/estado', [PresupuestoController::class, 'actualizarEstado'])
+
+🛡️ Middleware
+auth: protege rutas privadas
+
+role:admin: restringe acceso a clientes y productos
+
+role:user: acceso limitado a presupuestos
+
+📊 Diagrama de navegación por rol
+Código
+[User]
+ └── /presupuestos
+
+[Admin]
+ ├── /clientes
+ ├── /productos
+ └── /presupuestos
