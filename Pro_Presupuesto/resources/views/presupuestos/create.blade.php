@@ -1,59 +1,79 @@
-@extends('layouts.app')
+<x-app-layout>
+    {{-- Slot para el encabezado (si lo usas en app.blade.php) --}}
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ __('Crear Nuevo Presupuesto') }}
+        </h2>
+    </x-slot>
 
-@section('title', 'Crear Nuevo Presupuesto')
+    {{-- Contenedor principal de la vista --}}
+    <div class="py-12">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white p-8 rounded-lg shadow-xl">
 
-@section('content')
-    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
-        <h1 class="text-2xl font-bold mb-6 text-center">Crear Nuevo Presupuesto</h1>
+                <h1 class="text-3xl font-bold mb-8 text-center text-gray-800">Crear Nuevo Presupuesto</h1>
 
-        <form action="{{ route('presupuestos.store') }}" method="POST">
-            @csrf
+                <form action="{{ route('presupuestos.store') }}" method="POST">
+                    @csrf
 
-            <div class="mb-6">
-                <label for="cliente_id" class="block text-gray-700 font-bold mb-2">Cliente</label>
-                <select name="cliente_id" id="cliente_id" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">Selecciona un cliente...</option>
-                    {{-- Los clientes se llenarán desde el controlador en el futuro --}}
-                </select>
+                    {{-- --- Selección de Cliente --- --}}
+                    <div class="mb-6">
+                        <label for="cliente_id" class="block text-gray-700 font-semibold mb-2">Cliente</label>
+                        <select name="cliente_id" id="cliente_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150 shadow-sm">
+                            <option value="">Selecciona un cliente...</option>
+                            {{-- TODO: Iterar sobre la colección $clientes aquí: --}}
+                            {{-- @foreach($clientes as $cliente)
+                                <option value="{{ $cliente->id }}">{{ $cliente->nombre }}</option>
+                            @endforeach --}}
+                        </select>
+                        @error('cliente_id') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- --- Detalle del Presupuesto (Tabla) --- --}}
+                    <div class="mb-6 border p-4 rounded-lg bg-gray-50">
+                        <h3 class="text-xl font-bold mb-4 border-b pb-2 text-gray-700">Detalle de Productos</h3>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse">
+                                <thead class="bg-gray-200 text-gray-700">
+                                    <tr>
+                                        <th class="py-2 px-4 text-left font-semibold">Producto/Descripción</th>
+                                        <th class="py-2 px-4 text-left font-semibold w-24">Cantidad</th>
+                                        <th class="py-2 px-4 text-right font-semibold w-32">P. Unitario</th>
+                                        <th class="py-2 px-4 text-right font-semibold w-32">Subtotal</th>
+                                        <th class="py-2 px-4 w-12"></th> {{-- Columna de acciones --}}
+                                    </tr>
+                                </thead>
+                                <tbody id="productos-container">
+                                    {{-- Filas de productos inyectadas por JS/Livewire --}}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <button type="button" id="add-product" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150 shadow-md">
+                            Agregar Producto
+                        </button>
+                    </div>
+
+                    {{-- --- Totales --- --}}
+                    <div class="mt-8 text-right pr-4 border-t pt-4">
+                        <div class="text-gray-700 font-semibold text-lg">
+                            Subtotal: <span id="subtotal" class="font-normal text-gray-900">$0.00</span>
+                        </div>
+                        <div class="text-gray-900 font-bold text-2xl mt-2">
+                            Total: <span id="total" class="font-normal text-indigo-600">$0.00</span>
+                            <input type="hidden" name="total" id="hidden_total_input"> {{-- Campo oculto para enviar el total --}}
+                        </div>
+                    </div>
+
+                    {{-- --- Botón de Guardar --- --}}
+                    <div class="flex justify-end mt-8">
+                        <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 text-xl font-semibold focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-200 shadow-xl">
+                            Guardar Presupuesto
+                        </button>
+                    </div>
+                </form>
             </div>
-
-            <div class="mb-6">
-                <h3 class="text-xl font-bold mb-4">Detalle del Presupuesto</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full table-auto border-collapse">
-                        <thead>
-                            <tr class="bg-gray-200 text-gray-700">
-                                <th class="py-2 px-4 text-left font-semibold">Producto</th>
-                                <th class="py-2 px-4 text-left font-semibold w-24">Cantidad</th>
-                                <th class="py-2 px-4 text-right font-semibold w-32">Precio Unitario</th>
-                                <th class="py-2 px-4 text-right font-semibold w-32">Subtotal</th>
-                                <th class="py-2 px-4 w-12"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="productos-container">
-                            </tbody>
-                    </table>
-                </div>
-
-                <button type="button" id="add-product" class="mt-4 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
-                    Agregar Producto
-                </button>
-            </div>
-
-            <div class="mt-8 text-right pr-4">
-                <div class="text-gray-700 font-semibold text-lg">
-                    Subtotal: <span id="subtotal" class="font-normal">$0.00</span>
-                </div>
-                <div class="text-gray-700 font-bold text-xl mt-2">
-                    Total: <span id="total" class="font-normal">$0.00</span>
-                </div>
-            </div>
-
-            <div class="flex justify-end mt-8">
-                <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    Guardar Presupuesto
-                </button>
-            </div>
-        </form>
+        </div>
     </div>
-@endsection
+</x-app-layout>

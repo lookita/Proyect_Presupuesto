@@ -4,6 +4,7 @@ use App\Models\Cliente;
 use Illuminate\Http\Request;
 use App\Http\Requests\ClienteStoreRequest; // Día 13: uso de FormRequest para validaciones centralizadas
 use App\Services\ClienteService; // Día 14: servicio compartido para generación de código
+use App\Http\Controllers\Controller;
 
 class ClienteController extends Controller
 {
