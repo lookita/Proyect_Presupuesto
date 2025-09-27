@@ -92,7 +92,9 @@
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                     <a href="{{ route('presupuestos.show', $presupuesto) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Ver</a>
+                                                    @can('update', $presupuesto)
                                                     <a href="{{ route('presupuestos.edit', $presupuesto) }}" class="text-yellow-600 hover:text-yellow-900">Editar</a>
+                                                    @endcan
                                                 </td>
                                             </tr>
                                         @endforeach
