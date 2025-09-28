@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('presupuestos', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
             $table->foreignId('cliente_id')->constrained()->onDelete('cascade');
             $table->date('fecha');
             $table->string('estado')->default('pendiente');
