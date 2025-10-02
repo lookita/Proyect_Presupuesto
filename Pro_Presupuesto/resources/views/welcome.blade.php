@@ -6,6 +6,7 @@
     <link rel="icon" type="image/png" href="{{ asset('LogoS.png') }}">
     <title>{{ config('app.name', 'Gestor de presupuestos') }}</title>
 
+
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700,800,900" rel="stylesheet" />
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
@@ -16,6 +17,7 @@
 </head>
 <body class="bg-bg-light-blue flex justify-center items-center min-h-screen p-4 font-sans text-dark-text">
 
+
     <div class="main-container bg-card-bg rounded-app-xl shadow-2xl w-full max-w-6xl overflow-hidden">
         <header class="navbar bg-nav-bg-light px-8 py-6 md:px-10 md:py-8 flex flex-wrap justify-between items-center border-b border-gray-100 shadow-sm-light">
             <div class="logo flex items-center text-lg md:text-xl font-bold text-dark-text mb-4 md:mb-0">
@@ -23,12 +25,14 @@
                 <span class="logo-text tracking-wide">FINANCIERO</span>
             </div>
 
+
             <nav class="nav-links flex-grow flex justify-center md:justify-start order-3 md:order-none w-full md:w-auto mt-4 md:mt-0">
                 <a href="#" class="text-light-text text-sm md:text-base ml-0 md:ml-6 lg:ml-8 hover:text-primary-green transition-colors duration-300 px-2 py-1">Características</a>
                 <a href="#" class="text-light-text text-sm md:text-base ml-4 md:ml-6 lg:ml-8 hover:text-primary-green transition-colors duration-300 px-2 py-1">Precios</a>
                 <a href="#" class="text-light-text text-sm md:text-base ml-4 md:ml-6 lg:ml-8 hover:text-primary-green transition-colors duration-300 px-2 py-1">Acerca de Nosotros</a>
                 <a href="#" class="text-light-text text-sm md:text-base ml-4 md:ml-6 lg:ml-8 hover:text-primary-green transition-colors duration-300 px-2 py-1">Contacto</a>
             </nav>
+
 
             <div class="auth-buttons flex items-center ml-auto md:ml-0">
                 @if (Route::has('login'))
@@ -47,6 +51,7 @@
                             Iniciar Sesión
                         </a>
 
+
                         @if (Route::has('register'))
                             <a
                                 href="{{ route('register') }}"
@@ -60,6 +65,7 @@
             </div>
         </header>
 
+
         <section class="hero-section px-8 py-10 md:px-10 md:py-12 lg:px-12 lg:py-16 flex flex-col md:flex-row justify-between items-center gap-10 md:gap-12 lg:gap-16 text-center md:text-left">
             <div class="hero-content flex-1">
                 <h1 class="text-4xl md:text-5xl lg:text-6xl text-dark-text leading-tight font-extrabold mb-5 md:mb-6 lg:mb-8">
@@ -70,7 +76,7 @@
                 </p>
                 <a href="{{ route('register') }}" class="btn btn-cta inline-block bg-gradient-to-r from-primary-orange to-orange-400 text-white px-8 py-4 rounded-lg text-lg md:text-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300">Empieza Gratis</a>
             </div>
-            
+           
             <div class="hero-illustration flex-1 flex justify-center items-center min-h-[300px] md:min-h-[350px] relative">
                 <div class="placeholder-image bg-illustration-bg w-full max-w-sm md:max-w-md h-64 md:h-72 rounded-xl flex flex-col justify-center items-center text-light-text italic border-2 border-dashed border-primary-green opacity-70">
                     <p class="text-lg">Foto dashboard terminado</p>

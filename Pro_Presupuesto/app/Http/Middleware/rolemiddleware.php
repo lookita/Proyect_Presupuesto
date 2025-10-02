@@ -1,14 +1,24 @@
+<?php
+
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class RoleMiddleware
 {
-    public function handle($request, Closure $next, $role)
+    /**
+     * Verifica si el usuario tiene el rol requerido.
+     */
+    public function handle(Request $request, Closure $next, string $role): Response
     {
-        if ($request->user()->role !== $role) {
-            abort(403);
+        $user = $request->user();
+
+        if (!$user || $user->role !== $role) {
+            abort(403, 'No tienes permiso para acceder a esta sección.');
         }
+
         return $next($request);
     }
 }
