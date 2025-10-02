@@ -45,7 +45,7 @@
             @endif
 
             <!-- Page Content -->
-            <main class="py-12">
+            <main>
                 {{-- 
                     CORRECCIÓN CLAVE: Se añade el chequeo de existencia de $slot y la directiva @yield('content').
                     Esto permite que el layout funcione tanto con componentes de Blade (que usan $slot) 

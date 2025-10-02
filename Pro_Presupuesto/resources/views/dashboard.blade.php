@@ -1,10 +1,5 @@
 <x-app-layout>
     <div class="container mx-auto p-8">
-        <h1 class="text-4xl font-bold text-gray-800 mb-8">Dashboard</h1>
-
-        <a href="{{ route('clientes.create') }}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition duration-300 ease-in-out">
-            Crear Nuevo Cliente
-        </a>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div class="bg-white rounded-lg shadow-lg p-6 flex items-center justify-between">

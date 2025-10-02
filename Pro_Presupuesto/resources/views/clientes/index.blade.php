@@ -4,8 +4,6 @@
 
 @section('content')
     <div class="container mx-auto p-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">Clientes</h1>
-
         {{-- DÍA 15: FORMULARIO DE BÚSQUEDA Y BOTÓN CREAR --}}
         <div class="mb-6 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             
