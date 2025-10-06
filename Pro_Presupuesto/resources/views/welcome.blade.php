@@ -26,12 +26,12 @@
             </div>
 
 
-            <nav class="nav-links flex-grow flex justify-center md:justify-start order-3 md:order-none w-full md:w-auto mt-4 md:mt-0">
+            <!-- <nav class="nav-links flex-grow flex justify-center md:justify-start order-3 md:order-none w-full md:w-auto mt-4 md:mt-0">
                 <a href="#" class="text-light-text text-sm md:text-base ml-0 md:ml-6 lg:ml-8 hover:text-primary-green transition-colors duration-300 px-2 py-1">Características</a>
                 <a href="#" class="text-light-text text-sm md:text-base ml-4 md:ml-6 lg:ml-8 hover:text-primary-green transition-colors duration-300 px-2 py-1">Precios</a>
                 <a href="#" class="text-light-text text-sm md:text-base ml-4 md:ml-6 lg:ml-8 hover:text-primary-green transition-colors duration-300 px-2 py-1">Acerca de Nosotros</a>
                 <a href="#" class="text-light-text text-sm md:text-base ml-4 md:ml-6 lg:ml-8 hover:text-primary-green transition-colors duration-300 px-2 py-1">Contacto</a>
-            </nav>
+            </nav> -->
 
 
             <div class="auth-buttons flex items-center ml-auto md:ml-0">
