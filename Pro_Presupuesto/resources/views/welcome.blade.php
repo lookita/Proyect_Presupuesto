@@ -79,7 +79,7 @@
            
             <div class="hero-illustration flex-1 flex justify-center items-center min-h-[300px] md:min-h-[350px] relative">
                 <div class="placeholder-image bg-illustration-bg w-full max-w-sm md:max-w-md h-64 md:h-72 rounded-xl flex flex-col justify-center items-center text-light-text italic border-2 border-dashed border-primary-green opacity-70">
-                    <p class="text-lg">Foto dashboard terminado</p>
+                    <img src="/Dashboard.jpeg" alt="Foto modelo de app"/>
                 </div>
             </div>
         </section>
