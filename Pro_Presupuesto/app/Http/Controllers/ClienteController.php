@@ -8,28 +8,41 @@ use App\Http\Requests\ClienteStoreRequest;
 use App\Services\ClienteService;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ClienteController extends Controller
 {
     /**
      * Muestra una lista de clientes con búsqueda y orden dinámico.
      */
-    public function index(Request $request): View
+    public function index(Request $request)
     {
-        $search = $request->get('search');
-        $orderBy = $request->get('order_by', 'nombre');
-        $direction = $request->get('direction', 'asc');
-
-        $clientes = Cliente::query()
-            ->when($search, function ($query) use ($search) {
-                $query->search($search); // Usa scopeSearch definido en Cliente.php
-            })
-            ->orderBy($orderBy, $direction)
-            ->paginate(10);
-
-        return view('clientes.index', compact('clientes', 'search'));
+        // Filtros y búsqueda de clientes
+    
+        $query = Cliente::query();
+    
+        // Si hay un término de búsqueda, filtramos por nombre o email
+        if ($request->filled('buscar')) {
+            $buscar = $request->input('buscar');
+            $query->where('nombre', 'like', "%{$buscar}%")
+                ->orWhere('email', 'like', "%{$buscar}%");
+        }
+    
+        // Si hay filtro por fecha de creación
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('created_at', '>=', $request->input('fecha_desde'));
+        }
+    
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('created_at', '<=', $request->input('fecha_hasta'));
+        }
+    
+        // Paginamos los resultados
+        $clientes = $query->orderBy('nombre')->paginate(10);
+    
+        // Enviamos la data a la vista
+        return view('clientes.index', compact('clientes'));
     }
-
     /**
      * Muestra el formulario para crear un nuevo cliente.
      */
@@ -78,4 +91,31 @@ class ClienteController extends Controller
 
         return redirect()->route('clientes.index')->with('success', 'Cliente eliminado.');
     }
+
+    //Exporta PDF
+    public function exportarPDF(Request $request)
+{
+    $query = Cliente::query();
+
+    // Aplicar los mismos filtros que en el index
+    if ($request->filled('buscar')) {
+        $buscar = $request->input('buscar');
+        $query->where('nombre', 'like', "%{$buscar}%")
+            ->orWhere('email', 'like', "%{$buscar}%");
+    }
+
+    if ($request->filled('fecha_desde')) {
+        $query->whereDate('created_at', '>=', $request->input('fecha_desde'));
+    }
+
+    if ($request->filled('fecha_hasta')) {
+        $query->whereDate('created_at', '<=', $request->input('fecha_hasta'));
+    }
+
+    $clientes = $query->orderBy('nombre')->get();
+
+    // Generar el PDF con la vista
+    $pdf = Pdf::loadView('clientes.pdf', compact('clientes'));
+    return $pdf->download('clientes.pdf');
+}
 }

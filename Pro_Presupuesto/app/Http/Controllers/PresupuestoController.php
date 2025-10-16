@@ -10,6 +10,7 @@ use App\Models\Producto;
 use App\Models\PresupuestoDetalle; 
 use App\Services\PresupuestoService; 
 use App\Http\Requests\StorePresupuestoRequest; 
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PresupuestoController extends Controller
 {
@@ -220,4 +221,23 @@ class PresupuestoController extends Controller
 
         return redirect()->route('presupuestos.index')->with('success', 'Presupuesto eliminado correctamente.');
     }
+    public function exportarPDF(Request $request)
+{
+    $query = Presupuesto::with('cliente');
+
+    // Filtros opcionales
+    if ($request->filled('estado')) {
+        $query->where('estado', $request->input('estado'));
+    }
+
+    if ($request->filled('cliente_id')) {
+        $query->where('cliente_id', $request->input('cliente_id'));
+    }
+
+    $presupuestos = $query->orderBy('created_at', 'desc')->get();
+
+    $pdf = Pdf::loadView('presupuestos.pdf', compact('presupuestos'));
+
+    return $pdf->download('presupuestos.pdf');
+}
 }

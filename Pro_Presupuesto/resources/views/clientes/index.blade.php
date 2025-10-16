@@ -4,27 +4,51 @@
 
 @section('content')
     <div class="container mx-auto p-8">
-        {{-- DÍA 15: FORMULARIO DE BÚSQUEDA Y BOTÓN CREAR --}}
+        {{-- DÍA 27: FORMULARIO DE BÚSQUEDA Y BOTÓN CREAR: tarea de fran --}}
         <div class="mb-6 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             
             {{-- Formulario de Búsqueda --}}
-            <form method="GET" action="{{ route('clientes.index') }}" class="flex space-x-2 w-full md:w-1/2">
-                <input 
-                    type="text" 
-                    name="search" 
-                    placeholder="Buscar por Nombre o Email..." 
-                    value="{{ request('search') }}" 
-                    class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm w-full"
-                />
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md transition">
-                    Buscar
-                </button>
-                @if (request('search'))
-                    <a href="{{ route('clientes.index') }}" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md transition">
-                        Limpiar
-                    </a>
-                @endif
-            </form>
+                <form method="GET" action="{{ route('clientes.index') }}" class="flex flex-wrap gap-4">
+        <div>
+            <label class="block text-sm font-semibold text-gray-700">Buscar</label>
+            <input type="text" name="buscar" value="{{ request('buscar') }}"
+                placeholder="Nombre o Email"
+                class="border border-gray-300 rounded-md px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div>
+            <label class="block text-sm font-semibold text-gray-700">Desde</label>
+            <input type="date" name="fecha_desde" value="{{ request('fecha_desde') }}"
+                class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div>
+            <label class="block text-sm font-semibold text-gray-700">Hasta</label>
+            <input type="date" name="fecha_hasta" value="{{ request('fecha_hasta') }}"
+                class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div class="flex items-end">
+            <button type="submit"
+                class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none">
+                Filtrar
+            </button>
+        </div>
+
+        <div class="flex items-end">
+            <a href="{{ route('clientes.index') }}" 
+                class="bg-gray-400 text-white px-4 py-2 rounded-md hover:bg-gray-500 focus:outline-none">
+                Limpiar
+            </a>
+        </div>
+    </form>
+            <!-- Día 28: Botón para exportar a PDF -->
+        <div class="mb-4 text-right">
+            <a href="{{ route('clientes.exportarPDF', request()->all()) }}"
+                class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
+                📄 Exportar PDF
+            </a>
+        </div>
 
             {{-- Botón para Crear Cliente --}}
             <a href="{{ route('clientes.create') }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition w-full md:w-auto text-center">
@@ -71,10 +95,12 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                         <a href="{{ route('clientes.show', $cliente->id) }}" class="text-blue-600 hover:text-blue-900 mx-1">Ver</a>
                                         <a href="{{ route('clientes.edit', $cliente->id) }}" class="text-indigo-600 hover:text-indigo-900 mx-1">Editar</a>
-                                        <form action="{{ route('clientes.destroy', $cliente->id) }}" method="POST" class="inline-block">
+                                        <form action="{{ route('clientes.destroy', $cliente->id) }}" method="POST" onsubmit="return confirmarEliminacion(event)">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900 mx-1">Eliminar</button>
+                                            <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
+                                                Eliminar
+                                            </button>
                                         </form>
                                     </td>
                                 </tr>
@@ -100,3 +126,13 @@
         @endif
     </div>
 @endsection
+
+<script>
+function confirmarEliminacion(event) {
+    if (!confirm('¿Estás seguro de eliminar este registro? Esta acción no se puede deshacer.')) {
+        event.preventDefault();
+        return false;
+    }
+    return true;
+}
+</script>

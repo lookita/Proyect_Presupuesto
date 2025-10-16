@@ -54,6 +54,25 @@ php artisan migrate --seed
 5. Iniciar servidor:
 php artisan serve
 
+## 🚀 Reinstalación en entorno nuevo 
+1. Clonar el repositorio
+2. Copiar `.env.example` a `.env`
+3. Configurar base de datos
+4. Ejecutar:
+   ```bash
+   composer install
+   npm install
+   php artisan migrate --seed
+   php artisan serve
+
+## Entrega Final
+Proyecto completo de gestión de presupuestos.
+Funcionalidades:
+- CRUD completo (Clientes, Productos, Presupuestos)
+- Relaciones entre entidades
+- Exportación PDF
+- Búsqueda, filtros y roles
+
 
 <!-- Día 17 — Documentación técnica completa -->
 🧩 1. Modelos y relaciones

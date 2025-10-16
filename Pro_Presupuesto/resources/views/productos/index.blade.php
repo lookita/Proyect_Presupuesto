@@ -70,13 +70,13 @@
                                         @can('update', $producto)
                                             <a href="{{ route('productos.edit', $producto) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">{{ __('Editar') }}</a>
                                         @endcan
-
-                                        @can('delete', $producto)
-                                            <form action="{{ route('productos.destroy', $producto) }}" method="POST" class="inline-block" onsubmit="return confirm('{{ __('¿Estás seguro de que quieres eliminar este producto?') }}');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900">{{ __('Eliminar') }}</button>
-                                            </form>
+                                        <form action="{{ route('productos.destroy', $producto->id) }}" method="POST" onsubmit="return confirmarEliminacion(event)">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
+                                                Eliminar
+                                            </button>
+                                        </form>
                                         @endcan
                                     </td>
                                 </tr>
@@ -103,3 +103,12 @@
         </div>
     </div>
 </x-app-layout>
+<script>
+function confirmarEliminacion(event) {
+    if (!confirm('¿Estás seguro de eliminar este registro? Esta acción no se puede deshacer.')) {
+        event.preventDefault();
+        return false;
+    }
+    return true;
+}
+</script>

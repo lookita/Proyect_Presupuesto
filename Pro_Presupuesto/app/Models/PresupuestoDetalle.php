@@ -20,8 +20,7 @@ class PresupuestoDetalle extends Model
     ];
     
     // Relación: Un detalle pertenece a un presupuesto
-    public function presupuesto()
-    {
+    public function presupuesto(){
         return $this->belongsTo(Presupuesto::class);
     }
 

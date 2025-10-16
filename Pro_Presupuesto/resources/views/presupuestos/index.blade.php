@@ -121,3 +121,12 @@
         </div>
     </div>
 </x-app-layout>
+<script>
+function confirmarEliminacion(event) {
+    if (!confirm('¿Estás seguro de eliminar este registro? Esta acción no se puede deshacer.')) {
+        event.preventDefault();
+        return false;
+    }
+    return true;
+}
+</script>

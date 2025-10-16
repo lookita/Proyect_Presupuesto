@@ -18,8 +18,7 @@ class Presupuesto extends Model
     }
 
     // Relación con los detalles del presupuesto
-    public function detalles()
-    {
+    public function detalles(){
         return $this->hasMany(PresupuestoDetalle::class);
     }
 
