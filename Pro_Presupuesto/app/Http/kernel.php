@@ -10,11 +10,9 @@ class Kernel extends HttpKernel
      * Middleware global que se ejecuta en cada request.
      */
     protected $middleware = [
-        \App\Http\Middleware\TrustProxies::class,
+        // Middleware básico esencial
         \Illuminate\Http\Middleware\HandleCors::class,
-        \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
-        \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
     ];
 
@@ -32,8 +30,6 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-            // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
@@ -41,31 +37,13 @@ class Kernel extends HttpKernel
     /**
      * Middleware individuales que pueden asignarse a rutas.
      */
-    protected $routeMiddleware = [
+    protected $middlewareAliases = [
         'auth' => \App\Http\Middleware\Authenticate::class,
-        'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
-        'auth.session' => \Illuminate\Session\Middleware\AuthenticateSession::class,
-        'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
-        'can' => \Illuminate\Auth\Middleware\Authorize::class,
-        'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
-        'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
-        'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
-        'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
-        'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        // ✅ Middleware personalizado para roles:
         'role' => \App\Http\Middleware\RoleMiddleware::class,
     ];
 
-    /**
-     * Orden de prioridad para middleware no globales.
-     */
-    protected $middlewarePriority = [
-        \Illuminate\Session\Middleware\StartSession::class,
-        \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-        \Illuminate\Auth\Middleware\Authenticate::class,
-        \Illuminate\Routing\Middleware\ThrottleRequests::class,
-        \Illuminate\Session\Middleware\AuthenticateSession::class,
-        \Illuminate\Routing\Middleware\SubstituteBindings::class,
-        \Illuminate\Auth\Middleware\Authorize::class,
+    protected $routeMiddleware = [
+        'auth' => \App\Http\Middleware\Authenticate::class,
+        'role' => \App\Http\Middleware\RoleMiddleware::class,
     ];
 }

@@ -17,5 +17,11 @@ class RouteServiceProvider extends ServiceProvider
         Route::prefix('api')
             ->middleware('api')
             ->group(base_path('routes/api.php'));
+
+        // Registrar alias de middleware personalizado
+        $this->app['router']->aliasMiddleware('role', \App\Http\Middleware\RoleMiddleware::class);
+
+        // o usando Route facade:
+        // Route::aliasMiddleware('role', \App\Http\Middleware\RoleMiddleware::class);
     }
 }
