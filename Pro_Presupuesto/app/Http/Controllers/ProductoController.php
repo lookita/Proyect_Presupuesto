@@ -61,6 +61,22 @@ class ProductoController extends Controller
     }
 
     /**
+     * Muestra los detalles del producto especificado.
+     *
+     * @param  \App\Models\Producto  $producto
+     * @return \Illuminate\View\View
+     */
+    public function show(Producto $producto): View
+    {
+        // Laravel automáticamente inyecta y busca el Producto por su ID
+        // gracias a Route Model Binding (Producto $producto).
+        
+        return view('productos.show', [
+            'producto' => $producto,
+        ]);
+    }
+
+    /**
      * Muestra el formulario para editar un producto existente.
      *
      * @param  \App\Models\Producto  $producto
@@ -98,4 +114,9 @@ class ProductoController extends Controller
         $producto->delete();
         return redirect()->route('productos.index')->with('success', 'Producto eliminado.');
     }
+
+    public function json()
+    {
+        return response()->json(Producto::all());
+    }  
 }

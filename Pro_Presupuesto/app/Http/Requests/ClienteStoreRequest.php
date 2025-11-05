@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ClienteStoreRequest extends FormRequest
 {
@@ -19,11 +20,17 @@ class ClienteStoreRequest extends FormRequest
      */
     public function rules(): array
     {
+        $cliente = $this->route('cliente');
+
         return [
             'nombre' => 'required|string|max:255',
-            'email' => 'required|email|unique:clientes,email',
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('clientes', 'email')->ignore($cliente), 
+            ],
             // El código ya no se requiere en el formulario, pero sigue siendo único
-            'codigo' => 'unique:clientes,codigo',
+            'codigo' => 'nullable|unique:clientes,codigo', 
         ];
     }
 
@@ -36,7 +43,7 @@ class ClienteStoreRequest extends FormRequest
             'nombre.required' => 'El nombre es obligatorio.',
             'email.required' => 'El email es obligatorio.',
             'email.email' => 'El formato del email no es válido.',
-            'email.unique' => 'Este email ya está registrado.',
+            'email.unique' => 'Este email ya está registrado.', 
             'codigo.unique' => 'Este código ya está registrado.',
         ];
     }

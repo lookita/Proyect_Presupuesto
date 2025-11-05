@@ -7,29 +7,23 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Presupuesto;
 use App\Models\Cliente;
 use App\Models\Producto;
-use App\Models\PresupuestoDetalle; 
-use App\Services\PresupuestoService; 
-use App\Http\Requests\StorePresupuestoRequest; 
+use App\Models\PresupuestoDetalle;
+use App\Services\PresupuestoService;
+use App\Http\Requests\StorePresupuestoRequest;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class PresupuestoController extends Controller
 {
     /**
      * Muestra la lista de presupuestos con filtros.
      */
-    public function index(Request $request)
+    public function index(Request $request): View
     {
-        // Eager loading de cliente y detalles con sus productos.
-        $query = Presupuesto::with(['cliente', 'detalles.producto']);
-        
-        // Se usa 'latest()' que ordena por 'created_at' (fecha de creación) de forma descendente.
-        $query->latest(); 
-
-        if ($request->filled('estado')) {
-            $query->where('estado', $request->estado);
-        }
-
-        $presupuestos = $query->get();
+        $presupuestos = Presupuesto::with(['cliente', 'detalles.producto'])
+            ->latest()
+            ->get();
 
         return view('presupuestos.index', compact('presupuestos'));
     }
@@ -37,57 +31,55 @@ class PresupuestoController extends Controller
     /**
      * Muestra el formulario para crear un nuevo presupuesto.
      */
-    public function create()
+    public function create(): View
     {
         $clientes = Cliente::all(['id', 'nombre']);
-        // CORRECCIÓN: Usamos 'precio'
-        $productos = Producto::all(['id', 'nombre', 'precio']); 
+        $productos = Producto::all(['id', 'nombre', 'precio']);
         return view('presupuestos.create', compact('clientes', 'productos'));
     }
 
     /**
      * Almacena un presupuesto recién creado en la base de datos.
      */
-    public function store(StorePresupuestoRequest $request, PresupuestoService $presupuestoService)
+    public function store(StorePresupuestoRequest $request, PresupuestoService $presupuestoService): RedirectResponse
     {
         // La validación se maneja en StorePresupuestoRequest
         $validatedData = $request->validated();
 
         // Usamos una transacción para asegurar la integridad de Presupuesto y sus Detalles
         return DB::transaction(function () use ($validatedData, $request, $presupuestoService) {
-            
-            // 2. Crear el Presupuesto principal
+
+            // 1. Crear el Presupuesto principal
             $presupuesto = Presupuesto::create([
                 'cliente_id' => $validatedData['cliente_id'],
                 'fecha_emision' => $validatedData['fecha_emision'],
                 'estado' => 'pendiente',
-                'subtotal' => 0, // Se actualizarán luego
-                'total' => 0, 
-            ]); // SINTAXIS CORREGIDA
+                'subtotal' => 0.00,
+                'total' => 0.00,
+            ]);
 
-            // 3. Guardar los Detalles y calcular el subtotal de cada ítem
+            // 2. Guardar los Detalles y calcular el subtotal de cada ítem
             foreach ($request->items as $item) {
                 $precioUnitario = (float) $item['precio_unitario'];
                 $cantidad = (int) $item['cantidad'];
                 $descuento = (float) ($item['descuento'] ?? 0);
 
                 // Delegar el cálculo del subtotal del ítem al servicio 
-                $subtotalItem = $presupuestoService->calcularSubtotalItem($precioUnitario, $cantidad, $descuento);
+                $subtotalItem = $presupuestoService->calcularSubtotal($precioUnitario, $cantidad, $descuento);
 
-                PresupuestoDetalle::create([
-                    'presupuesto_id' => $presupuesto->id,
+                $presupuesto->detalles()->create([ // Usamos la relación para asegurar el ID
                     'producto_id' => $item['producto_id'],
                     'cantidad' => $cantidad,
                     'precio_unitario' => $precioUnitario,
-                    'descuento' => $descuento,
-                    'subtotal' => $subtotalItem, 
+                    'descuento_aplicado' => $descuento,
+                    'subtotal' => $subtotalItem,
                 ]);
             }
 
-            // 4. Recalcular el Subtotal (suma de subtotales de ítems) y Total
-            $totales = $presupuestoService->calcularTotalesPresupuesto($presupuesto);
+            // 3. Recalcular el Subtotal y Total usando el servicio
+            $totales = $presupuestoService->calcularTotalesPresupuesto($presupuesto->fresh());
 
-            // 5. Actualizar el Presupuesto con los totales finales
+            // 4. Actualizar el Presupuesto con los totales finales
             $presupuesto->update([
                 'subtotal' => $totales['subtotal'],
                 'total' => $totales['total'],
@@ -100,7 +92,7 @@ class PresupuestoController extends Controller
     /**
      * Muestra el presupuesto específico.
      */
-    public function show(Presupuesto $presupuesto)
+    public function show(Presupuesto $presupuesto): View
     {
         // Eager load de las relaciones necesarias
         $presupuesto->load(['cliente', 'detalles.producto']);
@@ -112,32 +104,31 @@ class PresupuestoController extends Controller
     /**
      * Muestra el formulario para editar el presupuesto específico.
      */
-    public function edit(Presupuesto $presupuesto)
+    public function edit(Presupuesto $presupuesto): View
     {
         // Eager load de las relaciones necesarias
         $presupuesto->load(['detalles.producto']);
 
         $clientes = Cliente::all(['id', 'nombre']);
-        // CORRECCIÓN: Usamos 'precio'
         $productos = Producto::all(['id', 'nombre', 'precio']);
-        
+
         return view('presupuestos.edit', compact('presupuesto', 'clientes', 'productos'));
     }
 
     /**
      * Actualiza el presupuesto específico en la base de datos.
      */
-    public function update(Request $request, Presupuesto $presupuesto, PresupuestoService $presupuestoService)
+    public function update(Request $request, Presupuesto $presupuesto, PresupuestoService $presupuestoService): RedirectResponse
     {
         // 1. Validación de cabecera y detalles 
         $validatedData = $request->validate([
             'cliente_id' => 'required|exists:clientes,id',
             'fecha_emision' => 'required|date',
-            'estado' => 'required|in:pendiente,aceptado,rechazado,facturado', 
-            
+            'estado' => 'required|in:pendiente,aceptado,rechazado,facturado',
+
             // Reglas para el array de ítems
             'items' => 'required|array|min:1',
-            'items.*.id' => 'nullable|exists:presupuesto_detalles,id', 
+            'items.*.id' => 'nullable|exists:presupuesto_detalles,id',
             'items.*.producto_id' => 'required|exists:productos,id',
             'items.*.cantidad' => 'required|integer|min:1',
             'items.*.precio_unitario' => 'required|numeric|min:0',
@@ -146,15 +137,16 @@ class PresupuestoController extends Controller
 
         return DB::transaction(function () use ($presupuesto, $validatedData, $request, $presupuestoService) {
 
-            // 2. Actualizar el Presupuesto principal
+            // 2. Actualizar el Presupuesto principal (cabecera)
             $presupuesto->update([
                 'cliente_id' => $validatedData['cliente_id'],
                 'fecha_emision' => $validatedData['fecha_emision'],
                 'estado' => $validatedData['estado'],
             ]);
-            
+
+            // Recolectar IDs de los detalles que deben permanecer
             $requestItemIds = collect($request->items)->pluck('id')->filter()->toArray();
-            
+
             // 3. Eliminar los detalles que NO están en la solicitud actual (sincronización)
             $presupuesto->detalles()->whereNotIn('id', $requestItemIds)->delete();
 
@@ -163,13 +155,15 @@ class PresupuestoController extends Controller
                 $precioUnitario = (float) $item['precio_unitario'];
                 $cantidad = (int) $item['cantidad'];
                 $descuento = (float) ($item['descuento'] ?? 0);
-                $subtotalItem = $presupuestoService->calcularSubtotalItem($precioUnitario, $cantidad, $descuento);
+
+                // CORRECCIÓN: Llamada al método correcto en el Service
+                $subtotalItem = $presupuestoService->calcularSubtotal($precioUnitario, $cantidad, $descuento);
 
                 $detalleData = [
                     'producto_id' => $item['producto_id'],
                     'cantidad' => $cantidad,
                     'precio_unitario' => $precioUnitario,
-                    'descuento' => $descuento,
+                    'descuento_aplicado' => $descuento,
                     'subtotal' => $subtotalItem,
                 ];
 
@@ -185,21 +179,24 @@ class PresupuestoController extends Controller
             }
 
             // 5. Recalcular y actualizar los Totales del Presupuesto
-            $totales = $presupuestoService->calcularTotalesPresupuesto($presupuesto->fresh()); 
+            // fresh() para obtener los detalles recién creados/actualizados
+            $totales = $presupuestoService->calcularTotalesPresupuesto($presupuesto->fresh());
 
             $presupuesto->update([
                 'subtotal' => $totales['subtotal'],
                 'total' => $totales['total'],
             ]);
 
-            return redirect()->route('presupuestos.index')->with('success', 'Presupuesto actualizado correctamente.');
+            return redirect()->route('presupuestos.show', $presupuesto->id)
+                 ->with('success', 'Presupuesto actualizado correctamente.');
+
         });
     }
 
     /**
      * Acción PATCH para cambiar estado del presupuesto con validación
      */
-    public function actualizarEstado(Request $request, Presupuesto $presupuesto)
+    public function actualizarEstado(Request $request, Presupuesto $presupuesto): RedirectResponse
     {
         $request->validate([
             'estado' => 'required|in:pendiente,aceptado,rechazado,facturado',
@@ -211,33 +208,37 @@ class PresupuestoController extends Controller
 
         return redirect()->route('presupuestos.index')->with('success', 'Estado actualizado correctamente.');
     }
-    
+
     /**
      * Elimina el presupuesto.
      */
-    public function destroy(Presupuesto $presupuesto)
+    public function destroy(Presupuesto $presupuesto): RedirectResponse
     {
         $presupuesto->delete();
 
         return redirect()->route('presupuestos.index')->with('success', 'Presupuesto eliminado correctamente.');
     }
+
+    /**
+     * Exporta la lista de presupuestos a PDF.
+     */
     public function exportarPDF(Request $request)
-{
-    $query = Presupuesto::with('cliente');
+    {
+        $query = Presupuesto::with('cliente');
 
-    // Filtros opcionales
-    if ($request->filled('estado')) {
-        $query->where('estado', $request->input('estado'));
+        // Filtros opcionales
+        if ($request->filled('estado')) {
+            $query->where('estado', $request->input('estado'));
+        }
+
+        if ($request->filled('cliente_id')) {
+            $query->where('cliente_id', $request->input('cliente_id'));
+        }
+
+        $presupuestos = $query->orderBy('created_at', 'desc')->get();
+
+        $pdf = Pdf::loadView('presupuestos.pdf', compact('presupuestos'));
+
+        return $pdf->download('presupuestos_listado.pdf'); // Nombre más descriptivo
     }
-
-    if ($request->filled('cliente_id')) {
-        $query->where('cliente_id', $request->input('cliente_id'));
-    }
-
-    $presupuestos = $query->orderBy('created_at', 'desc')->get();
-
-    $pdf = Pdf::loadView('presupuestos.pdf', compact('presupuestos'));
-
-    return $pdf->download('presupuestos.pdf');
-}
 }

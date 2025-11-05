@@ -1,8 +1,4 @@
-@extends('layouts.app')
-
-@section('title', 'Crear Nuevo Presupuesto')
-
-@section('content')
+<x-app-layout>
     <div class="container mx-auto p-4 md:p-8 max-w-6xl">
         <h1 class="text-3xl font-bold text-gray-800 mb-8">Crear Presupuesto</h1>
 
@@ -102,7 +98,7 @@
                     </table>
                 </div>
 
-                <button type="button" onclick="addItem()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out mb-6">
+                <button type="button" id="add-product" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out mb-6">
                     + Agregar Producto
                 </button>
 
@@ -117,14 +113,14 @@
                         </div>
                         <div class="flex justify-between font-medium text-gray-700">
                             <span>Subtotal Neto (con Descuento):</span>
-                            <span id="display-subtotal">$ 0.00</span>
-                            {{-- This hidden input sends the calculated subtotal (after discounts) to the server --}}
+                            <span id="subtotal">$ 0.00</span> 
+                            {{-- Se usa 'subtotal' para coincidir con el JS, aunque el input se llama 'input-subtotal' --}}
                             <input type="hidden" name="subtotal" id="input-subtotal" value="0.00">
                         </div>
                         <div class="flex justify-between font-bold text-xl text-gray-800 border-t pt-3 mt-3">
                             <span>Total Final:</span>
-                            <span id="display-total">$ 0.00</span>
-                            {{-- This hidden input sends the final total (which currently equals the net subtotal) --}}
+                            <span id="total">$ 0.00</span> 
+                            {{-- Se usa 'total' para coincidir con el JS, aunque el input se llama 'input-total' --}}
                             <input type="hidden" name="total" id="input-total" value="0.00">
                         </div>
                     </div>
@@ -146,7 +142,7 @@
     <script>
         // 1. Datos iniciales del servidor
         // Transformar la colección de productos de PHP a un objeto JS para un acceso rápido por ID.
-        const productosPHP = {!! json_encode($productos) !!};
+        const productosPHP = @json($productos);
         const productosMap = {};
         productosPHP.forEach(p => {
             // Aseguramos que el precio sea un número flotante
@@ -167,9 +163,9 @@
                 producto_id: null,
                 precio_unitario: 0.00,
                 cantidad: 1,
-                descuento: 0,
+                descuento_aplicado: 0, // <- CLAVE CORREGIDA
                 subtotal_bruto: 0.00, // Precio * Cantidad (sin descuento)
-                subtotal: 0.00,      // Precio * Cantidad con descuento aplicado
+                subtotal: 0.00,       // Precio * Cantidad con descuento aplicado
             };
             items.push(newItem);
             renderItemsTable();
@@ -193,7 +189,7 @@
             if (index === -1) return;
 
             // Asegurarse de que los valores numéricos sean números y manejen campos vacíos o nulos
-            if (['cantidad', 'descuento', 'precio_unitario'].includes(field)) {
+            if (['cantidad', 'descuento_aplicado', 'precio_unitario'].includes(field)) {
                 // Convertir a número flotante o 0 si está vacío
                 items[index][field] = parseFloat(value) || 0;
             } else {
@@ -219,7 +215,7 @@
             let item = items[index];
             const precio = item.precio_unitario;
             const cantidad = item.cantidad;
-            const descuento = item.descuento; // %
+            const descuento = item.descuento_aplicado;
 
             let subtotalBruto = precio * cantidad;
             let subtotalNeto = subtotalBruto;
@@ -252,10 +248,10 @@
             // Supongamos que el Total Final es el Subtotal Neto por ahora (sin IVA, etc.)
             let totalFinal = totalSubtotalNeto; 
 
-            // Actualizar los displays
+            // Actualizar los displays (usando IDs del HTML)
             document.getElementById('display-subtotal-bruto').textContent = `$ ${totalSubtotalBruto.toFixed(2)}`;
-            document.getElementById('display-subtotal').textContent = `$ ${totalSubtotalNeto.toFixed(2)}`;
-            document.getElementById('display-total').textContent = `$ ${totalFinal.toFixed(2)}`;
+            document.getElementById('subtotal').textContent = `$ ${totalSubtotalNeto.toFixed(2)}`;
+            document.getElementById('total').textContent = `$ ${totalFinal.toFixed(2)}`;
 
             // Actualizar los inputs hidden para el envío del formulario
             document.getElementById('input-subtotal').value = totalSubtotalNeto.toFixed(2);
@@ -332,10 +328,10 @@
                             min="0"
                             max="100"
                             step="1"
-                            name="items[${index}][descuento]" 
-                            value="${item.descuento}"
-                            oninput="updateItem(${item.tempId}, 'descuento', this.value)"
-                            class="w-full border-gray-300 rounded-lg text-sm text-right p-2 @error('items.${index}.descuento') border-red-500 @enderror"
+                            name="items[${index}][descuento_aplicado]" 
+                            value="${item.descuento_aplicado}"
+                            oninput="updateItem(${item.tempId}, 'descuento_aplicado', this.value)"
+                            class="w-full border-gray-300 rounded-lg text-sm text-right p-2 @error('items.${index}.descuento_aplicado') border-red-500 @enderror"
                         />
                     </td>
                 `;
@@ -375,10 +371,16 @@
 
         // Inicializar la tabla y los totales al cargar la página
         window.onload = function() {
-            // Aseguramos que la tabla se dibuje incluso si no hay ítems (muestra el mensaje "Agregar Producto")
-            renderItemsTable(); 
-            // Calcula y muestra los totales (debe ser $0.00 al inicio)
-            calculateTotals(); 
+            // Asignar el listener al botón de agregar producto
+            document.getElementById('add-product').addEventListener('click', addItem);
+            
+            // Si es la vista de creación, agrega una fila inicial si el array de items está vacío
+            if (items.length === 0 && document.getElementById('items-table-body').children.length === 0) {
+                addItem();
+            } else {
+                renderItemsTable(); 
+                calculateTotals(); 
+            }
         };
     </script>
-@endsection
+</x-app-layout>

@@ -20,7 +20,7 @@ class StorePresupuestoRequest extends FormRequest
             'items.*.producto_id' => 'required|exists:productos,id',
             'items.*.cantidad' => 'required|integer|min:1',
             'items.*.precio_unitario' => 'required|numeric|min:0',
-            'items.*.descuento' => 'nullable|numeric|min:0|max:100',
+            'items.*.descuento_aplicado' => 'nullable|numeric|min:0|max:100',
         ];
     }
 

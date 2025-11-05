@@ -1,75 +1,102 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Gestión de Productos') }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+@section('title', 'Gestión de Productos')
 
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-lg font-medium text-gray-900">Listado de productos</h3>
-                    <a href="{{ route('productos.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                        Nuevo Producto
-                    </a>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @forelse($productos as $producto)
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $producto->nombre }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $producto->codigo }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ number_format($producto->precio, 2) }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $producto->stock }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                        <a href="{{ route('productos.show', $producto) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Ver</a>
-                                        <a href="{{ route('productos.edit', $producto) }}" class="text-yellow-600 hover:text-yellow-900 mr-3">Editar</a>
-                                        <form action="{{ route('productos.destroy', $producto) }}" method="POST" class="inline" onsubmit="return confirmarEliminacion(event);">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">Eliminar</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">No hay productos.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="mt-4">
-                    @if(method_exists($productos, 'links'))
-                        {{ $productos->links() }}
-                    @endif
-                </div>
-
+@section('content')
+<div class="container mx-auto p-8">
+    
+    <div class="mb-6 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        
+        <form method="GET" action="{{ route('productos.index') }}" class="flex flex-wrap gap-4 items-end">
+            <div>
+                <label for="search" class="block text-sm font-semibold text-gray-700">Buscar Producto</label>
+                <input type="text" name="search" id="search" value="{{ $search }}"
+                    placeholder="Buscar por nombre..."
+                    class="h-10 border border-gray-300 rounded-md px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
+
+            <button type="submit"
+                class="h-10 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none">
+                Filtrar
+            </button>
+            
+            @if ($search)
+                <a href="{{ route('productos.index') }}"
+                    class="inline-block h-10 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 focus:outline-none text-center leading-6">
+                    Limpiar
+                </a>
+            @endif
+        </form>
+
+        {{-- Botón para Crear Producto --}}
+        <a href="{{ route('productos.create') }}" class="h-10 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition w-full md:w-auto text-center">
+            + Nuevo Producto
+        </a>
+    </div>
+
+    @if (count($productos) > 0)
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-200">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach ($productos as $producto)
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ $producto->nombre }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ $producto->codigo }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ number_format($producto->precio, 2) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ $producto->stock }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                            <a href="{{ route('productos.show', $producto->id) }}" class="text-blue-600 hover:text-blue-900 mx-1">Ver</a>
+                            <a href="{{ route('productos.edit', $producto->id) }}" class="text-yellow-600 hover:text-yellow-900 mx-1">Editar</a>
+                            <form action="{{ route('productos.destroy', $producto->id) }}" method="POST" onsubmit="return confirmarEliminacion(event)" class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-xs">
+                                    Eliminar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
     </div>
-</x-app-layout>
+
+    {{-- Paginación --}}
+    <div class="mt-4">
+        @if(method_exists($productos, 'links'))
+            {{ $productos->appends(['search' => $search])->links() }}
+        @endif
+    </div>
+    @else
+    <div class="text-center py-10 bg-white rounded-lg shadow-lg">
+        <p class="text-gray-500">No hay productos registrados.</p>
+        @if ($search)
+        <p class="text-gray-700 font-semibold mt-2">No se encontraron productos para la búsqueda: "{{ $search }}"</p>
+        @else
+        <p class="text-gray-500 mt-2">¡Comienza a crear uno!</p>
+        @endif
+    </div>
+    @endif
+</div>
+@endsection
 
 <script>
-function confirmarEliminacion(event) {
-    if (!confirm('¿Estás seguro de eliminar este registro? Esta acción no se puede deshacer.')) {
-        event.preventDefault();
-        return false;
+    function confirmarEliminacion(event) {
+        if (!confirm('¿Estás seguro de eliminar este registro? Esta acción no se puede deshacer.')) {
+            event.preventDefault();
+            return false;
+        }
+        return true;
     }
-    return true;
-}
 </script>

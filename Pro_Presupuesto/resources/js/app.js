@@ -1,4 +1,5 @@
 import './bootstrap';
+import './presupuestos.js';
 
 import Alpine from 'alpinejs';
 

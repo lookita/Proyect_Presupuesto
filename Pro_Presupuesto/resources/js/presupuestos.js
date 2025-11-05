@@ -44,8 +44,14 @@ document.addEventListener("DOMContentLoaded", () => {
     async function fetchProductos() {
         try {
             // URL al endpoint creado por Franco en ProductoController
-            const response = await fetch('/productos/json');
-            
+            const response = await fetch('/productos/json', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            }); 
+                       
             if (!response.ok) {
                 throw new Error('Error al cargar los productos. Código: ' + response.status);
             }

@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="container mx-auto p-8">
+    <div class="container mx-auto p-8 pt-4">
         <div class="flex items-center justify-between bg-transparent">
             <div x-data="{ openHelp: false }" class="flex items-center space-x-2">
                 <button @click="openHelp = true" class="inline-flex items-center px-3 py-1 border rounded bg-white hover:bg-gray-50 text-sm">
@@ -27,7 +27,7 @@
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded shadow mt-6">
+        <div class="bg-white p-6 rounded shadow mt-4">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div class="bg-white rounded-lg shadow-lg p-6 flex items-center justify-between">
                     <div>
@@ -112,11 +112,13 @@
                                 <td class="px-6 py-4 whitespace-nowrap">${{ number_format($presupuesto->total, 2) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                            @if($presupuesto->estado === 'facturado')
-                                                bg-green-100 text-green-800
-                                            @else
-                                                bg-red-100 text-red-800
-                                            @endif">
+                                        @if($presupuesto->estado === 'facturado')
+                                            bg-green-100 text-green-800
+                                        @elseif($presupuesto->estado === 'pendiente')
+                                            bg-yellow-100 text-yellow-800
+                                        @else
+                                            bg-red-100 text-red-800
+                                        @endif">
                                         {{ $presupuesto->estado }}
                                     </span>
                                 </td>

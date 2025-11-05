@@ -1,9 +1,4 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Detalle del Presupuesto') }} #{{ $presupuesto->id }}
-        </h2>
-    </x-slot>
 
     <div class="py-8">
         {{-- Aumentamos el ancho para un mejor layout del contenido --}}
@@ -14,11 +9,7 @@
                     <h1 class="text-3xl font-extrabold text-indigo-700">
                         Presupuesto #{{ $presupuesto->id }}
                     </h1>
-                    {{-- Botón de Edición --}}
                     <a href="{{ route('presupuestos.edit', $presupuesto) }}" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition duration-150 shadow-md flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-1.884 12.25l-2.007 1.138-1.026 3.693 4.232-4.232 3.693-1.026 1.138-2.007z" fill-rule="evenodd" clip-rule="evenodd" />
-                        </svg>
                         Editar
                     </a>
                 </div>
@@ -75,7 +66,7 @@
                                 <td class="py-3 px-4 text-sm font-medium text-gray-900">{{ $detalle->producto->nombre }}</td>
                                 <td class="py-3 px-4 text-center text-sm text-gray-700">{{ $detalle->cantidad }}</td>
                                 <td class="py-3 px-4 text-right text-sm text-gray-700">${{ number_format($detalle->precio_unitario, 2) }}</td>
-                                <td class="py-3 px-4 text-right text-sm text-red-600 font-medium">{{ $detalle->descuento ?? 0 }}%</td>
+                                <td class="py-3 px-4 text-right text-sm text-red-600 font-medium">{{ $detalle->descuento_aplicado ?? 0 }}%</td>
                                 <td class="py-3 px-4 text-right text-sm font-bold text-gray-900">
                                     {{-- El subtotal debe ser el campo 'subtotal' de la tabla de detalle, ya calculado con el descuento --}}
                                     ${{ number_format($detalle->subtotal, 2) }}

@@ -65,6 +65,19 @@ class ClienteController extends Controller
     }
 
     /**
+     * Muestra los detalles de un cliente específico.
+     *
+     * @param  \App\Models\Cliente  $cliente
+     * @return \Illuminate\View\View
+     */
+    public function show(Cliente $cliente): View
+    {
+        // Gracias al Route Model Binding, Laravel ya inyectó el cliente
+        // basado en el ID de la ruta.
+        return view('clientes.show', compact('cliente'));
+    }
+
+    /**
      * Muestra el formulario de edición para un cliente.
      */
     public function edit(Cliente $cliente): View
@@ -94,28 +107,28 @@ class ClienteController extends Controller
 
     //Exporta PDF
     public function exportarPDF(Request $request)
-{
-    $query = Cliente::query();
+    {
+        $query = Cliente::query();
 
-    // Aplicar los mismos filtros que en el index
-    if ($request->filled('buscar')) {
-        $buscar = $request->input('buscar');
-        $query->where('nombre', 'like', "%{$buscar}%")
-            ->orWhere('email', 'like', "%{$buscar}%");
+        // Aplicar los mismos filtros que en el index
+        if ($request->filled('buscar')) {
+            $buscar = $request->input('buscar');
+            $query->where('nombre', 'like', "%{$buscar}%")
+                ->orWhere('email', 'like', "%{$buscar}%");
+        }
+
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('created_at', '>=', $request->input('fecha_desde'));
+        }
+
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('created_at', '<=', $request->input('fecha_hasta'));
+        }
+
+        $clientes = $query->orderBy('nombre')->get();
+
+        // Generar el PDF con la vista
+        $pdf = Pdf::loadView('clientes.pdf', compact('clientes'));
+        return $pdf->download('clientes.pdf');
     }
-
-    if ($request->filled('fecha_desde')) {
-        $query->whereDate('created_at', '>=', $request->input('fecha_desde'));
-    }
-
-    if ($request->filled('fecha_hasta')) {
-        $query->whereDate('created_at', '<=', $request->input('fecha_hasta'));
-    }
-
-    $clientes = $query->orderBy('nombre')->get();
-
-    // Generar el PDF con la vista
-    $pdf = Pdf::loadView('clientes.pdf', compact('clientes'));
-    return $pdf->download('clientes.pdf');
-}
 }

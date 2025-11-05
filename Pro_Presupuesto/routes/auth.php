@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\PasswordController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use Livewire\Volt\Volt;
 
 Route::middleware('guest')->group(function () {
@@ -26,9 +28,14 @@ Route::middleware('auth')->group(function () {
         ->middleware(['signed', 'throttle:6,1'])
         ->name('verification.verify');
 
+    Route::post('/email/verification-notification', function (Request $request) {
+        $request->user()->sendEmailVerificationNotification();
+        return back()->with('message', 'Link de verificación enviado!');
+    })->middleware(['throttle:6,1'])->name('verification.send');
+
     Volt::route('confirm-password', 'pages.auth.confirm-password')
         ->name('password.confirm');
 
-    Volt::route('profile', 'pages.profile.edit')
-        ->name('profile');
+    Route::put('password', [PasswordController::class, 'update'])
+        ->name('password.update');
 });

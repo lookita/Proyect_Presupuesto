@@ -74,7 +74,7 @@
                 <p class="text-base md:text-lg text-light-text leading-relaxed mb-8 md:mb-10 lg:mb-12">
                     Gestiona tus ingresos y gastos, alcanza tus metas financieras y vive sin preocupaciones.
                 </p>
-                <a href="{{ route('register') }}" class="btn btn-cta inline-block bg-gradient-to-r from-primary-orange to-orange-400 text-white px-8 py-4 rounded-lg text-lg md:text-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300">Empieza Gratis</a>
+                <a href="{{ route('register') }}" class="btn btn-cta inline-block bg-gradient-to-r from-primary-orange to-orange-400 text-white px-8 py-4 rounded-lg text-lg md:text-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300">Empezar</a>
             </div>
            
             <div class="hero-illustration flex-1 flex justify-center items-center min-h-[300px] md:min-h-[350px] relative">

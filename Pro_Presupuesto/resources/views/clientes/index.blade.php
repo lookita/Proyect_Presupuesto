@@ -67,13 +67,6 @@
         <a href="{{ route('clientes.index', ['order_by' => 'email', 'direction' => 'desc']) }}" class="text-blue-600 hover:underline">Email ↓</a>
     </div>
 
-    {{-- Mensaje flash mejorado --}}
-    @if (session('success'))
-    <div class="bg-green-600 text-white p-4 rounded-lg shadow-lg border-l-4 border-green-800 mb-6">
-        <strong>✔️ Éxito:</strong> {{ session('success') }}
-    </div>
-    @endif
-
     @if (count($clientes) > 0)
     <div class="bg-white rounded-lg shadow-lg overflow-hidden">
         <div class="overflow-x-auto">

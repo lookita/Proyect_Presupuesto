@@ -36,11 +36,12 @@
                                     shadow-sm 
                                     transition duration-150
                                 "
+                                style="padding-right: 35px;"
                             >
                                 <option value="" {{ request('estado') == '' ? 'selected' : '' }}>-- Todos --</option>
                                 <option value="pendiente" {{ request('estado') == 'pendiente' ? 'selected' : '' }}>Pendiente</option>
                                 <option value="facturado" {{ request('estado') == 'facturado' ? 'selected' : '' }}>Facturado</option>
-                                {{-- Si tienes más estados, agrégalos aquí --}}
+                                <option value="cancelado" {{ request('estado') == 'cancelado' ? 'selected' : '' }}>Cancelado</option>
                             </select>
                         </form>
                         {{-- ---------------------------------------------------------------- --}}

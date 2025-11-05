@@ -15,7 +15,8 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->name('dashboard');
 
 // Rutas solo para admin
-Route::middleware(['auth', 'role:admin'])->group(function () {
+Route::middleware(['auth'])->group(function () {
+    Route::get('/productos/json', [ProductoController::class, 'json'])->name('productos.json');
     Route::resource('productos', ProductoController::class);
 });
 
