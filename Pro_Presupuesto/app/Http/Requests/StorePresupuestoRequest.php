@@ -15,7 +15,7 @@ class StorePresupuestoRequest extends FormRequest
     {
         return [
             'cliente_id' => 'required|exists:clientes,id',
-            'fecha_emision' => 'required|date',
+            'fecha' => 'required|date',
             'items' => 'required|array|min:1',
             'items.*.producto_id' => 'required|exists:productos,id',
             'items.*.cantidad' => 'required|integer|min:1',

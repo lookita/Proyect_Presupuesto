@@ -10,6 +10,7 @@ class Presupuesto extends Model
 {
     use HasFactory;
     protected $fillable = ['cliente_id', 'fecha', 'estado'];
+    protected $casts = ['fecha' => 'datetime'];
 
     // Relación con el cliente
     public function cliente()
