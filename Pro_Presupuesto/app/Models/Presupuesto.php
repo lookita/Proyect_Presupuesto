@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 class Presupuesto extends Model
 {
     use HasFactory;
-    protected $fillable = ['cliente_id', 'fecha', 'estado'];
+    protected $fillable = ['cliente_id', 'fecha', 'estado', 'subtotal', 'total'];
     protected $casts = ['fecha' => 'datetime'];
 
     // Relación con el cliente
@@ -19,7 +19,8 @@ class Presupuesto extends Model
     }
 
     // Relación con los detalles del presupuesto
-    public function detalles(){
+    public function detalles()
+    {
         return $this->hasMany(PresupuestoDetalle::class);
     }
 
@@ -32,13 +33,13 @@ class Presupuesto extends Model
             $query->where(function (Builder $q) use ($search) {
                 // 1. Búsqueda directa por estado (asume que el estado es una palabra clave)
                 $q->where('estado', 'LIKE', "%{$search}%")
-                  // 2. Búsqueda por ID de presupuesto
-                  ->orWhere('id', $search)
-                  // 3. Búsqueda por nombre o código del Cliente relacionado (JOIN implícito)
-                  ->orWhereHas('cliente', function (Builder $qr) use ($search) {
-                      $qr->where('nombre', 'LIKE', "%{$search}%")
-                         ->orWhere('codigo', 'LIKE', "%{$search}%");
-                  });
+                    // 2. Búsqueda por ID de presupuesto
+                    ->orWhere('id', $search)
+                    // 3. Búsqueda por nombre o código del Cliente relacionado (JOIN implícito)
+                    ->orWhereHas('cliente', function (Builder $qr) use ($search) {
+                        $qr->where('nombre', 'LIKE', "%{$search}%")
+                            ->orWhere('codigo', 'LIKE', "%{$search}%");
+                    });
             });
         }
     }
@@ -55,5 +56,13 @@ class Presupuesto extends Model
             'descuento_aplicado' => $descuento,
             'subtotal' => $subtotal,
         ]);
+    }
+
+    public function getSubtotalBrutoAttribute()
+    {
+        // Suma de cantidad * precio_unitario de cada detalle, ignorando descuentos
+        return $this->detalles->sum(function ($detalle) {
+            return $detalle->cantidad * $detalle->precio_unitario;
+        });
     }
 }

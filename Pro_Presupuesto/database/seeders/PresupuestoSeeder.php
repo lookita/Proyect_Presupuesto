@@ -21,7 +21,7 @@ class PresupuestoSeeder extends Seeder
         $adminUser = User::first();
         
         // 1. INSTANCIAR FAKER
-        $faker = \Faker\Factory::create(); 
+        $faker = \Faker\Factory::create();
 
         if ($clientes->isEmpty() || $productos->isEmpty() || !$adminUser) {
             echo "Error: Asegúrate de que UserSeeder, ClienteSeeder y ProductoSeeder se hayan ejecutado correctamente.\n";
@@ -31,41 +31,47 @@ class PresupuestoSeeder extends Seeder
         // Crear 20 presupuestos de prueba
         // 2. PASAR $faker AL BLOQUE use()
         Presupuesto::factory()->count(20)->make()->each(function (Presupuesto $presupuesto) use ($clientes, $productos, $estados, $adminUser, $faker) {
-            
+
             // Asignar datos (user_id y cliente_id)
             $presupuesto->cliente_id = $clientes->random()->id;
             $presupuesto->estado = $estados[array_rand($estados)];
-            $presupuesto->user_id = $adminUser->id; 
+            $presupuesto->user_id = $adminUser->id;
             $presupuesto->save();
 
-            $totalPresupuesto = 0;
-            
+            $subtotalBruto = 0; // antes de descuentos
+            $totalNeto = 0;     // después de descuentos
+
             // Crear entre 2 y 5 detalles (productos) para este presupuesto
             $detallesCount = rand(2, 5);
             $productosUsados = $productos->shuffle()->take($detallesCount);
 
             foreach ($productosUsados as $producto) {
                 $cantidad = rand(1, 4);
-                $precioUnitario = $producto->precio; 
-                
-                $descuento = $faker->boolean(20) ? $faker->randomFloat(2, 5, 20) : 0; 
-                
+                $precioUnitario = $producto->precio;
+
+                $descuento = $faker->boolean(20) ? $faker->randomFloat(2, 5, 20) : 0;
+
+                $subtotalItem = $precioUnitario * $cantidad;
                 $precioFinal = $precioUnitario * (1 - $descuento / 100);
-                $subtotal = $precioFinal * $cantidad;
+                $subtotalConDescuento = $precioFinal * $cantidad;
 
                 $presupuesto->detalles()->create([
                     'producto_id' => $producto->id,
                     'cantidad' => $cantidad,
                     'precio_unitario' => $precioUnitario,
                     'descuento_aplicado' => $descuento,
-                    'subtotal' => $subtotal,
+                    'subtotal' => $subtotalConDescuento, // este es el valor real del detalle
                 ]);
 
-                $totalPresupuesto += $subtotal;
+                $subtotalBruto += $subtotalItem;
+                $totalNeto += $subtotalConDescuento;
             }
 
-            // Actualizar el total del presupuesto
-            $presupuesto->update(['total' => $totalPresupuesto]);
+            // Actualiza los totales del presupuesto
+            $presupuesto->update([
+                'subtotal' => $subtotalBruto,
+                'total' => $totalNeto,
+            ]);
         });
     }
 }

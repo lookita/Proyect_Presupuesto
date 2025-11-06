@@ -10,7 +10,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-8">
-    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md mt-9">
         <h1 class="text-2xl font-bold mb-6 text-center">Crear Nuevo Cliente</h1>
 
         <form action="{{ route('clientes.store') }}" method="POST">

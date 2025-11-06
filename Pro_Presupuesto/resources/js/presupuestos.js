@@ -1,405 +1,427 @@
-// Archivo: resources/js/presupuestos.js (CÓDIGO FUENTE)
-// Lógica robusta de Sol para la creación y gestión de Presupuestos.
+// Archivo: resources/js/presupuestos.js
+// Gestión completa de presupuestos (creación, edición, cálculo de totales, cambio de estado)
+// Refactorizado para encapsular lógica en un objeto PresupuestoApp
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Variable global para almacenar los productos reales cargados desde el backend
-    let productos = [];
-    let itemIndex = 0; // Usado para asegurar índices únicos en el array items[N] de Laravel
+    const PresupuestoApp = {
+        productos: [],
+        itemIndex: 0,
+        form: null,
+        productosContainer: null,
+        addProductBtn: null,
+        subtotalEl: null,
+        totalEl: null,
+        existingDetails: [],
 
-    // Referencias principales del DOM y datos iniciales
-    const form = document.getElementById('presupuesto-form');
-    if (!form) return;
-    
-    // IMPORTANTE para la vista 'edit': Carga los detalles existentes del data-attribute del formulario
-    // Se asume que en la vista Blade se hace algo como: <form data-details="{{ $presupuesto->detalles->toJson() }}">
-    const existingDetails = JSON.parse(form.dataset.details || '[]'); 
+        init() {
+            this.cacheDom();
+            if (!this.form) return;
 
-    // Elementos del DOM para los cálculos
-    const productosContainer = document.getElementById("productos-container");
-    const addProductBtn = document.getElementById("add-product");
-    const subtotalEl = document.getElementById("subtotal"); // Elemento <span> para mostrar Subtotal
-    const totalEl = document.getElementById("total");       // Elemento <span> para mostrar Total
-    
-    // -----------------------------------------------------------------
-    // LÓGICA DE UTILIDAD
-    // -----------------------------------------------------------------
+            this.existingDetails = JSON.parse(
+                this.form.dataset.details || "[]"
+            );
 
-    /**
-     * Muestra un mensaje temporal al usuario (usa console.warn como fallback).
-     * En un entorno real, Sol implementaría aquí un toast o modal.
-     */
-    function showTemporaryMessage(message, type = 'info') {
-        console.warn(`[${type.toUpperCase()}] ${message}`);
-        // Implementación visual de un mensaje temporal (ej. un div flotante) iría aquí.
-    }
-
-
-    // -----------------------------------------------------------------
-    // LÓGICA DE CARGA DE PRODUCTOS (Día 17 - Sol)
-    // -----------------------------------------------------------------
-
-    /**
-     * Carga los productos desde el endpoint JSON de Franco.
-     */
-    async function fetchProductos() {
-        try {
-            // URL al endpoint creado por Franco en ProductoController
-            const response = await fetch('/productos/json', {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                }
-            }); 
-                       
-            if (!response.ok) {
-                throw new Error('Error al cargar los productos. Código: ' + response.status);
-            }
-            
-            const data = await response.json();
-            productos = data; // Almacena los productos reales
-            console.log('Productos cargados exitosamente:', productos);
-            
-        } catch (error) {
-            console.error('Fallo al obtener los productos:', error);
-            // Si falla, los productos quedarán como array vacío, lo que evitará errores de JS.
-        }
-    }
-
-    // -----------------------------------------------------------------
-    // LÓGICA DE CÁLCULO DE TOTALES (MEJORADA CON DESCUENTO)
-    // -----------------------------------------------------------------
-
-    /**
-     * Recalcula el subtotal de todos los items aplicando cantidad, precio y descuento.
-     */
-    function recalcularTotales() {
-        let subtotalGeneral = 0;
-        
-        // 1. Recorrer todas las filas de productos
-        document.querySelectorAll(".detalle-row").forEach((row) => {
-            const cantidadInput = row.querySelector(".input-cantidad");
-            const precioInput = row.querySelector(".input-precio");
-            const descuentoInput = row.querySelector(".input-descuento");
-            const itemSubtotalDisplay = row.querySelector(".item-subtotal-display");
-            const itemSubtotalHidden = row.querySelector(".item-subtotal-hidden");
-
-            if (cantidadInput && precioInput && descuentoInput && itemSubtotalDisplay && itemSubtotalHidden) {
-                // Aseguramos que los valores sean números, usando 0 si el input está vacío o es inválido
-                const cantidad = parseFloat(cantidadInput.value) || 0;
-                const precio = parseFloat(precioInput.value) || 0; 
-                const descuentoPorcentaje = parseFloat(descuentoInput.value) || 0; 
-                
-                // Cálculo del Subtotal de la Fila (Aplicando el Descuento)
-                const subtotalBruto = cantidad * precio;
-                
-                // Aplicar factor de descuento, asegurando que no exceda el 100%
-                const descuentoFactor = 1 - Math.min(descuentoPorcentaje, 100) / 100;
-
-                const subtotalItem = subtotalBruto * descuentoFactor;
-                
-                subtotalGeneral += subtotalItem;
-
-                // Actualizar los valores en el DOM (visible) y en el input oculto (para envío)
-                itemSubtotalDisplay.textContent = `$${subtotalItem.toFixed(2)}`;
-                itemSubtotalHidden.value = subtotalItem.toFixed(2);
-            }
-        });
-
-        // 2. Actualizar el subtotal y total general en el pie del presupuesto
-        if (subtotalEl) {
-             subtotalEl.textContent = `$${subtotalGeneral.toFixed(2)}`;
-        }
-        if (totalEl) {
-             // Total general (por ahora igual al subtotal, sin impuestos o descuentos generales)
-             totalEl.textContent = `$${subtotalGeneral.toFixed(2)}`;
-        }
-    }
-
-    /**
-     * Genera el HTML para una nueva fila de producto.
-     * @param {number} index - Índice de la fila para asegurar nombres de input únicos (items[N]).
-     * @param {object} detailData - Datos opcionales para inicializar la fila (ej. en la vista edit).
-     * @returns {string} El HTML de la fila.
-     */
-    function generarFilaHtml(index, detailData = {}) {
-        const selectedId = detailData.producto_id || '';
-        // Buscar el producto en el array global para obtener el precio base, si no está en detailData
-        const productBase = productos.find(p => p.id === parseInt(selectedId));
-        
-        // Determinar valores iniciales (priorizando detailData si existe)
-        const selectedPrecio = detailData.precio_unitario !== undefined 
-            ? parseFloat(detailData.precio_unitario).toFixed(2) 
-            : (productBase ? parseFloat(productBase.precio_unitario).toFixed(2) : '0.00');
-
-        const cantidadInicial = detailData.cantidad !== undefined ? detailData.cantidad : 1;
-        const descuentoInicial = detailData.descuento_aplicado !== undefined ? detailData.descuento_aplicado : 0;
-        
-        // Si hay datos iniciales, calculamos el subtotal de esa fila para la visualización inicial
-        const initialSubtotalBruto = cantidadInicial * parseFloat(selectedPrecio);
-        const initialDiscountFactor = 1 - Math.min(parseFloat(descuentoInicial), 100) / 100;
-        const initialSubtotal = initialSubtotalBruto * initialDiscountFactor;
-
-
-        // Se asumen las clases para Tailwind: detalle-row (para buscar la fila), input-cantidad, input-precio, input-descuento
-        return `
-            <tr class="detalle-row border-b border-gray-100" data-detail-id="${detailData.id || ''}">
-                <td class="py-3 px-4 w-1/3">
-                    <select name="items[${index}][producto_id]" class="w-full px-3 py-2 border rounded-md producto-select focus:outline-none focus:ring-blue-500">
-                        <option value="">Selecciona un producto...</option>
-                        ${productos.map(p => {
-                            const isSelected = p.id === parseInt(selectedId);
-                            // Se añade el precio unitario del producto como data-attribute para facilitar la carga al seleccionar
-                            return `<option value="${p.id}" data-price="${parseFloat(p.precio_unitario).toFixed(2)}" ${isSelected ? 'selected' : ''}>${p.nombre} ($${parseFloat(p.precio_unitario).toFixed(2)})</option>`;
-                        }).join('')}
-                    </select>
-                    <!-- Campo oculto para enviar el ID del detalle existente (en modo edición), crucial para el update/delete en Laravel -->
-                    ${detailData.id ? `<input type="hidden" name="items[${index}][id]" value="${detailData.id}">` : ''}
-                </td>
-                <td class="py-3 px-4 w-[10%]">
-                    <input type="number" name="items[${index}][cantidad]" class="w-full px-3 py-2 border rounded-md input-cantidad text-right focus:outline-none focus:ring-blue-500" value="${cantidadInicial}" min="1">
-                </td>
-                <td class="py-3 px-4 w-[15%]">
-                    <!-- Campo de descuento (%) -->
-                    <input type="number" name="items[${index}][descuento_aplicado]" class="w-full px-3 py-2 border rounded-md input-descuento text-right focus:outline-none focus:ring-blue-500" value="${descuentoInicial}" min="0" max="100" step="0.01">
-                </td>
-                <td class="py-3 px-4 w-[15%]">
-                    <!-- Precio unitario, clave para el cálculo y el envío -->
-                    <input type="number" name="items[${index}][precio_unitario]" class="w-full px-3 py-2 border rounded-md input-precio text-right focus:outline-none focus:ring-blue-500" value="${selectedPrecio}" step="0.01">
-                </td>
-                <td class="py-3 px-4 w-[15%] text-right font-semibold">
-                    <span class="item-subtotal-display">$${initialSubtotal.toFixed(2)}</span>
-                    <input type="hidden" name="items[${index}][subtotal]" class="item-subtotal-hidden" value="${initialSubtotal.toFixed(2)}">
-                </td>
-                <td class="py-3 px-4 w-[10%] text-center">
-                    <button type="button" class="remove-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none transition duration-150 ease-in-out">&times;</button>
-                </td>
-            </tr>
-        `;
-    }
-
-    /**
-     * Agrega una nueva fila de producto al contenedor, usando el primer producto como defecto.
-     */
-    function agregarFilaProducto() {
-        // Si no hay productos cargados, evita agregar una fila vacía
-        if (productos.length === 0) {
-            showTemporaryMessage("No hay productos cargados para agregar. Verifica la conexión con el servidor.", 'error');
-            return;
-        }
-        
-        // En modo "creación", agrega un selector vacío para forzar la elección. 
-        // En modo "edición" la lógica de carga ya agregó los detalles existentes.
-        const newRowHtml = generarFilaHtml(itemIndex++, {}); 
-        productosContainer.insertAdjacentHTML('beforeend', newRowHtml);
-        recalcularTotales();
-    }
-    
-    /**
-     * Carga los detalles existentes del presupuesto (Modo Edición).
-     */
-    function loadExistingDetails(details) {
-        productosContainer.innerHTML = ''; // Asegura que el contenedor esté vacío antes de cargar
-        details.forEach(detail => {
-            const newRowHtml = generarFilaHtml(itemIndex++, detail);
-            productosContainer.insertAdjacentHTML('beforeend', newRowHtml);
-        });
-        recalcularTotales();
-    }
-
-    // -----------------------------------------------------------------
-    // LÓGICA DE INICIALIZACIÓN
-    // -----------------------------------------------------------------
-
-    /**
-     * Carga datos e inicializa listeners.
-     */
-    async function loadDataAndInitialize() {
-        // 1. Cargar productos
-        await fetchProductos();
-
-        // 2. Inicializar listeners
-        if (productosContainer) {
-            
-            // Listener para el botón "Agregar Producto"
-            if (addProductBtn) {
-                addProductBtn.addEventListener("click", agregarFilaProducto);
-            }
-            
-            // 3. Inicializar filas: Cargar existentes (edición) o agregar una nueva (creación)
-            if (productos.length > 0) {
-                if (existingDetails.length > 0) {
-                    loadExistingDetails(existingDetails); // Carga la data para modo edición
-                } else if (productosContainer.children.length === 0) {
-                    // Solo en vista de creación y si no hay filas pre-renderizadas
-                    agregarFilaProducto();
-                }
-            } else {
-                 showTemporaryMessage("No se pudo cargar la lista de productos. Funcionalidad de presupuesto deshabilitada.", 'error');
-            }
-            
-            // 4. DELEGACIÓN DE EVENTOS: Manejar los eventos de input y click en el contenedor padre
-            productosContainer.addEventListener('input', (e) => {
-                // Ahora también escucha cambios en el input-descuento
-                if (e.target.classList.contains('input-cantidad') || 
-                    e.target.classList.contains('input-precio') ||
-                    e.target.classList.contains('input-descuento')) {
-                    recalcularTotales();
+            this.fetchProductos().then(() => {
+                this.bindEvents();
+                if (this.existingDetails.length > 0) {
+                    this.loadExistingDetails(this.existingDetails);
+                } else if (this.productosContainer.children.length === 0) {
+                    this.agregarFilaProducto();
                 }
             });
 
-            productosContainer.addEventListener('change', (e) => {
-                // Revisa si es un cambio en el select del producto
-                if (e.target.classList.contains('producto-select')) {
-                    const row = e.target.closest('.detalle-row');
-                    // Aseguramos que el ID sea numérico (o null si es la opción vacía)
-                    const newProductoId = parseInt(e.target.value) || null; 
-                    
-                    // --- INICIO LÓGICA DE VALIDACIÓN DE DUPLICADOS (Día 18 - Sol) ---
+            this.initStatusButtons();
+        },
+
+        cacheDom() {
+            this.form = document.getElementById("presupuesto-form");
+            this.productosContainer = document.getElementById(
+                "productos-container"
+            );
+            this.addProductBtn = document.getElementById("add-product");
+            this.subtotalEl = document.getElementById("subtotal");
+            this.totalEl = document.getElementById("total");
+        },
+
+        showTemporaryMessage(message, type = "info") {
+            console.warn(`[${type.toUpperCase()}] ${message}`);
+            // Aquí se podría integrar un toast visual
+        },
+
+        async fetchProductos() {
+            try {
+                const response = await fetch("/productos/json", {
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                        Accept: "application/json",
+                        "X-CSRF-TOKEN": document.querySelector(
+                            'meta[name="csrf-token"]'
+                        ).content,
+                    },
+                });
+
+                if (!response.ok)
+                    throw new Error(
+                        "Error al cargar los productos. Código: " +
+                            response.status
+                    );
+
+                this.productos = await response.json();
+                console.log("Productos cargados:", this.productos);
+            } catch (error) {
+                console.error("Fallo al obtener los productos:", error);
+                this.productos = [];
+            }
+        },
+
+        // ✅ FUNCIÓN AUXILIAR: Obtener precio del producto (compatible con 'precio' o 'precio_unitario')
+        getPrecioProducto(producto) {
+            if (!producto) return 0;
+            // Intentar ambos campos para máxima compatibilidad
+            return parseFloat(producto.precio_unitario || producto.precio || 0);
+        },
+
+        recalcularTotales() {
+            let subtotalBrutoGeneral = 0; // suma de todos los productos sin descuentos
+            let totalNetoGeneral = 0; // suma de todos los productos con descuento aplicado
+
+            document.querySelectorAll(".detalle-row").forEach((row) => {
+                const cantidadInput = row.querySelector(".input-cantidad");
+                const precioInput = row.querySelector(".input-precio");
+                const descuentoInput = row.querySelector(".input-descuento");
+                const itemSubtotalDisplay = row.querySelector(
+                    ".item-subtotal-display"
+                );
+                const itemSubtotalHidden = row.querySelector(
+                    ".item-subtotal-hidden"
+                );
+
+                if (
+                    cantidadInput &&
+                    precioInput &&
+                    descuentoInput &&
+                    itemSubtotalDisplay &&
+                    itemSubtotalHidden
+                ) {
+                    const cantidad = parseFloat(cantidadInput.value) || 0;
+                    const precio = parseFloat(precioInput.value) || 0;
+                    const descuento = parseFloat(descuentoInput.value) || 0;
+
+                    const subtotalBruto = cantidad * precio; // subtotal bruto de la fila
+                    const subtotalNeto =
+                        subtotalBruto * (1 - Math.min(descuento, 100) / 100); // subtotal neto con descuento
+
+                    subtotalBrutoGeneral += subtotalBruto; // acumulamos subtotal bruto
+                    totalNetoGeneral += subtotalNeto; // acumulamos subtotal neto
+
+                    // Actualizamos la fila para mostrar subtotal neto (con descuento)
+                    itemSubtotalDisplay.textContent = `$${subtotalNeto.toFixed(
+                        2
+                    )}`;
+                    itemSubtotalHidden.value = subtotalNeto.toFixed(2);
+                }
+            });
+
+            // Actualizamos los spans visibles
+            if (this.subtotalEl)
+                this.subtotalEl.textContent = `$${subtotalBrutoGeneral.toFixed(
+                    2
+                )}`;
+            if (this.totalEl)
+                this.totalEl.textContent = `$${totalNetoGeneral.toFixed(2)}`;
+
+            // Actualizamos los hidden inputs para enviar al backend
+            const hiddenSubtotal = document.getElementById("hidden-subtotal");
+            const hiddenTotal = document.getElementById("hidden-total");
+            if (hiddenSubtotal)
+                hiddenSubtotal.value = subtotalBrutoGeneral.toFixed(2);
+            if (hiddenTotal) hiddenTotal.value = totalNetoGeneral.toFixed(2);
+        },
+
+        generarFilaHtml(index, detailData = {}) {
+            const selectedId = detailData.producto_id || "";
+            const productBase = this.productos.find(
+                (p) => p.id === parseInt(selectedId)
+            );
+
+            // ✅ CORRECCIÓN: Usar la función auxiliar para obtener el precio
+            const selectedPrecio =
+                detailData.precio_unitario !== undefined
+                    ? parseFloat(detailData.precio_unitario).toFixed(2)
+                    : productBase
+                    ? this.getPrecioProducto(productBase).toFixed(2)
+                    : "0.00";
+
+            const cantidadInicial =
+                detailData.cantidad !== undefined ? detailData.cantidad : 1;
+            const descuentoInicial =
+                detailData.descuento_aplicado !== undefined
+                    ? detailData.descuento_aplicado
+                    : 0;
+
+            const initialSubtotalBruto =
+                cantidadInicial * parseFloat(selectedPrecio);
+            const initialDiscountFactor =
+                1 - Math.min(parseFloat(descuentoInicial), 100) / 100;
+            const initialSubtotal =
+                initialSubtotalBruto * initialDiscountFactor;
+
+            return `
+                <tr class="detalle-row border-b border-gray-100" data-detail-id="${
+                    detailData.id || ""
+                }">
+                    <td class="py-3 px-4 w-1/3">
+                        <select name="items[${index}][producto_id]" class="w-full px-3 py-2 border rounded-md producto-select focus:outline-none focus:ring-blue-500">
+                            <option value="">Selecciona un producto...</option>
+                            ${this.productos
+                                .map((p) => {
+                                    const isSelected =
+                                        p.id === parseInt(selectedId);
+                                    const precio = this.getPrecioProducto(p);
+                                    return `<option value="${
+                                        p.id
+                                    }" data-price="${precio.toFixed(2)}" ${
+                                        isSelected ? "selected" : ""
+                                    }>${p.nombre} ($${precio.toFixed(
+                                        2
+                                    )})</option>`;
+                                })
+                                .join("")}
+                        </select>
+                        ${
+                            detailData.id
+                                ? `<input type="hidden" name="items[${index}][id]" value="${detailData.id}">`
+                                : ""
+                        }
+                    </td>
+                    <td class="py-3 px-4 w-[10%]">
+                        <input type="number" name="items[${index}][cantidad]" class="w-full px-3 py-2 border rounded-md input-cantidad text-right focus:outline-none focus:ring-blue-500" value="${cantidadInicial}" min="1">
+                    </td>
+                    <td class="py-3 px-4 w-[15%]">
+                        <input type="number" name="items[${index}][descuento_aplicado]" class="w-full px-3 py-2 border rounded-md input-descuento text-right focus:outline-none focus:ring-blue-500" value="${descuentoInicial}" min="0" max="100" step="0.01">
+                    </td>
+                    <td class="py-3 px-4 w-[15%]">
+                        <input type="number" name="items[${index}][precio_unitario]" class="w-full px-3 py-2 border rounded-md input-precio text-right focus:outline-none focus:ring-blue-500" value="${selectedPrecio}" step="0.01">
+                    </td>
+                    <td class="py-3 px-4 w-[15%] text-right font-semibold">
+                        <span class="item-subtotal-display">$${initialSubtotal.toFixed(
+                            2
+                        )}</span>
+                        <input type="hidden" name="items[${index}][subtotal]" class="item-subtotal-hidden" value="${initialSubtotal.toFixed(
+                2
+            )}">
+                    </td>
+                    <td class="py-3 px-4 w-[10%] text-center">
+                        <button type="button" class="remove-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none transition duration-150 ease-in-out">&times;</button>
+                    </td>
+                </tr>
+            `;
+        },
+
+        agregarFilaProducto() {
+            if (this.productos.length === 0) {
+                this.showTemporaryMessage(
+                    "No hay productos cargados para agregar.",
+                    "error"
+                );
+                return;
+            }
+            const newRowHtml = this.generarFilaHtml(this.itemIndex++);
+            this.productosContainer.insertAdjacentHTML("beforeend", newRowHtml);
+            this.recalcularTotales();
+        },
+
+        loadExistingDetails(details) {
+            this.productosContainer.innerHTML = "";
+            details.forEach((detail) => {
+                const newRowHtml = this.generarFilaHtml(
+                    this.itemIndex++,
+                    detail
+                );
+                this.productosContainer.insertAdjacentHTML(
+                    "beforeend",
+                    newRowHtml
+                );
+            });
+            this.recalcularTotales();
+        },
+
+        bindEvents() {
+            if (!this.productosContainer) return;
+
+            if (this.addProductBtn) {
+                this.addProductBtn.addEventListener("click", () =>
+                    this.agregarFilaProducto()
+                );
+            }
+
+            // Delegación de eventos: input (cantidad, precio, descuento)
+            this.productosContainer.addEventListener("input", (e) => {
+                if (
+                    e.target.classList.contains("input-cantidad") ||
+                    e.target.classList.contains("input-precio") ||
+                    e.target.classList.contains("input-descuento")
+                ) {
+                    this.recalcularTotales();
+                }
+            });
+
+            // Delegación de eventos: cambio de producto
+            this.productosContainer.addEventListener("change", (e) => {
+                if (e.target.classList.contains("producto-select")) {
+                    const row = e.target.closest(".detalle-row");
+                    const newProductoId = parseInt(e.target.value) || null;
+
                     let isDuplicated = false;
                     if (newProductoId) {
-                        const currentRows = document.querySelectorAll(".detalle-row");
                         let count = 0;
-                        currentRows.forEach(currentRow => {
-                            const select = currentRow.querySelector(".producto-select");
-                            // Verifica si el valor no está vacío y es el mismo ID
-                            if (select.value && parseInt(select.value) === newProductoId) {
-                                count++;
-                            }
-                        });
-
-                        // Si se encuentra más de una vez (la fila actual + otra anterior)
-                        if (count > 1) {
-                            isDuplicated = true;
-                        }
+                        document
+                            .querySelectorAll(".detalle-row")
+                            .forEach((r) => {
+                                const select =
+                                    r.querySelector(".producto-select");
+                                if (
+                                    select.value &&
+                                    parseInt(select.value) === newProductoId
+                                )
+                                    count++;
+                            });
+                        if (count > 1) isDuplicated = true;
                     }
 
                     if (isDuplicated) {
-                        showTemporaryMessage("🚨 El producto ya fue agregado al presupuesto. Por favor, selecciona otro.", 'error');
-                        // Resetear el select de la fila actual a vacío
-                        e.target.value = ""; 
+                        this.showTemporaryMessage(
+                            "🚨 El producto ya fue agregado.",
+                            "error"
+                        );
+                        e.target.value = "";
                     }
-                    // --- FIN LÓGICA DE VALIDACIÓN DE DUPLICADOS ---
 
-                    const productoSeleccionado = productos.find(p => p.id === newProductoId);
-                    
-                    // Actualiza el precio unitario del input de la fila y resetea cantidad/descuento
-                    if (productoSeleccionado && row) {
-                        const precioInput = row.querySelector(".input-precio");
-                        const descuentoInput = row.querySelector(".input-descuento");
-                        const cantidadInput = row.querySelector(".input-cantidad");
-
-                        if (precioInput) {
-                            // Cargar el precio unitario del producto seleccionado
-                            precioInput.value = parseFloat(productoSeleccionado.precio_unitario).toFixed(2);
-                        }
-                        // Resetea cantidad y descuento al cambiar de producto
-                        if (cantidadInput) cantidadInput.value = 1;
-                        if (descuentoInput) descuentoInput.value = 0;
-                        
-                    } else if (row) {
-                        // Si selecciona la opción vacía (o si el duplicado forzó el reset), limpiar campos
-                        const precioInput = row.querySelector(".input-precio");
-                        const descuentoInput = row.querySelector(".input-descuento");
-                        const cantidadInput = row.querySelector(".input-cantidad");
-                        
-                        if (precioInput) precioInput.value = '0.00';
-                        if (cantidadInput) cantidadInput.value = 1;
-                        if (descuentoInput) descuentoInput.value = 0;
-                    }
-                    recalcularTotales();
-                }
-            });
-
-            productosContainer.addEventListener('click', (e) => {
-                // Revisa si es un click en el botón de eliminar
-                if (e.target.closest('.remove-btn')) {
-                    const row = e.target.closest('.detalle-row');
+                    const productoSeleccionado = this.productos.find(
+                        (p) => p.id === newProductoId
+                    );
                     if (row) {
-                        // Si queda solo una fila, la limpiamos, no la eliminamos
-                        if (document.querySelectorAll(".detalle-row").length > 1) {
-                            row.remove();
-                            recalcularTotales();
-                        } else {
-                            // Limpiar la fila si es la única (comportamiento de reset)
-                            const select = row.querySelector(".producto-select");
-                            const cantidadInput = row.querySelector(".input-cantidad");
-                            const precioInput = row.querySelector(".input-precio");
-                            const descuentoInput = row.querySelector(".input-descuento");
-                            
-                            if (select) select.value = "";
+                        const precioInput = row.querySelector(".input-precio");
+                        const descuentoInput =
+                            row.querySelector(".input-descuento");
+                        const cantidadInput =
+                            row.querySelector(".input-cantidad");
+
+                        if (productoSeleccionado) {
+                            if (precioInput)
+                                precioInput.value =
+                                    this.getPrecioProducto(
+                                        productoSeleccionado
+                                    ).toFixed(2);
                             if (cantidadInput) cantidadInput.value = 1;
-                            if (precioInput) precioInput.value = '0.00';
                             if (descuentoInput) descuentoInput.value = 0;
-                            recalcularTotales();
-                        }
-                    }
-                }
-            });
-        }
-    }
-    
-    // Iniciar la aplicación
-    loadDataAndInitialize();
-    
-    // -----------------------------------------------------------------
-    // LÓGICA DE CAMBIO DE ESTADO DE PRESUPUESTOS (Tabla Listado) - Se mantiene
-    // -----------------------------------------------------------------
-    
-    const statusButtons = document.querySelectorAll('.btn-status');
-    // NOTA: Se asegura de que el token CSRF se obtenga correctamente
-    const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
-    const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : null;
-
-
-    if (statusButtons.length > 0 && csrfToken) { // Asegura que el token esté disponible
-        statusButtons.forEach(button => {
-            button.addEventListener('click', async (event) => {
-                const id = button.dataset.id;
-                
-                try {
-                    const response = await fetch(`/presupuestos/${id}/estado`, {
-                        method: 'PATCH',
-                        headers: {
-                            'X-CSRF-TOKEN': csrfToken, 
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                        }
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        const newStatus = data.new_status;
-                        
-                        // 1. Actualizar data attributes y texto
-                        button.dataset.status = newStatus;
-                        button.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
-                        
-                        // 2. Actualizar las clases de Tailwind (estilo visual)
-                        const statusClasses = {
-                            'facturado': ['bg-green-100', 'text-green-800'],
-                            'pendiente': ['bg-red-100', 'text-red-800'],
-                            // Se puede añadir 'aceptado', 'rechazado' si existen
-                        };
-
-                        // Limpiar clases existentes
-                        button.classList.remove('bg-red-100', 'text-red-800', 'bg-green-100', 'text-green-800', 'bg-yellow-100', 'text-yellow-800');
-                        
-                        // Aplicar nuevas clases
-                        if (statusClasses[newStatus]) {
-                            button.classList.add(...statusClasses[newStatus]);
                         } else {
-                            // Estado genérico o no reconocido
-                            button.classList.add('bg-yellow-100', 'text-yellow-800');
+                            if (precioInput) precioInput.value = "0.00";
+                            if (cantidadInput) cantidadInput.value = 1;
+                            if (descuentoInput) descuentoInput.value = 0;
                         }
-
-                    } else {
-                        console.error('Error al actualizar el estado. Estado de respuesta:', response.status);
                     }
-                } catch (error) {
-                    console.error('Hubo un error en la petición:', error);
+
+                    this.recalcularTotales();
                 }
             });
-        });
-    }
+
+            // Delegación de eventos: eliminar fila
+            this.productosContainer.addEventListener("click", (e) => {
+                if (e.target.closest(".remove-btn")) {
+                    const row = e.target.closest(".detalle-row");
+                    if (!row) return;
+                    if (document.querySelectorAll(".detalle-row").length > 1) {
+                        row.remove();
+                    } else {
+                        const select = row.querySelector(".producto-select");
+                        const cantidadInput =
+                            row.querySelector(".input-cantidad");
+                        const precioInput = row.querySelector(".input-precio");
+                        const descuentoInput =
+                            row.querySelector(".input-descuento");
+                        if (select) select.value = "";
+                        if (cantidadInput) cantidadInput.value = 1;
+                        if (precioInput) precioInput.value = "0.00";
+                        if (descuentoInput) descuentoInput.value = 0;
+                    }
+                    this.recalcularTotales();
+                }
+            });
+        },
+
+        initStatusButtons() {
+            const statusButtons = document.querySelectorAll(".btn-status");
+            const csrfTokenMeta = document.querySelector(
+                'meta[name="csrf-token"]'
+            );
+            const csrfToken = csrfTokenMeta
+                ? csrfTokenMeta.getAttribute("content")
+                : null;
+
+            if (statusButtons.length === 0 || !csrfToken) return;
+
+            statusButtons.forEach((button) => {
+                button.addEventListener("click", async () => {
+                    const id = button.dataset.id;
+                    try {
+                        const response = await fetch(
+                            `/presupuestos/${id}/estado`,
+                            {
+                                method: "PATCH",
+                                headers: {
+                                    "X-CSRF-TOKEN": csrfToken,
+                                    "Content-Type": "application/json",
+                                    Accept: "application/json",
+                                },
+                            }
+                        );
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            const newStatus = data.new_status;
+                            button.dataset.status = newStatus;
+                            button.textContent =
+                                newStatus.charAt(0).toUpperCase() +
+                                newStatus.slice(1);
+
+                            const statusClasses = {
+                                facturado: ["bg-green-100", "text-green-800"],
+                                pendiente: ["bg-red-100", "text-red-800"],
+                            };
+
+                            button.classList.remove(
+                                "bg-red-100",
+                                "text-red-800",
+                                "bg-green-100",
+                                "text-green-800",
+                                "bg-yellow-100",
+                                "text-yellow-800"
+                            );
+                            if (statusClasses[newStatus]) {
+                                button.classList.add(
+                                    ...statusClasses[newStatus]
+                                );
+                            } else {
+                                button.classList.add(
+                                    "bg-yellow-100",
+                                    "text-yellow-800"
+                                );
+                            }
+                        } else {
+                            console.error(
+                                "Error al actualizar el estado. Código:",
+                                response.status
+                            );
+                        }
+                    } catch (error) {
+                        console.error("Error en la petición:", error);
+                    }
+                });
+            });
+        },
+    };
+
+    // Inicializar la aplicación
+    PresupuestoApp.init();
 });

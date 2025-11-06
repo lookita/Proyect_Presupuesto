@@ -35,16 +35,17 @@ class PresupuestoService
      */
     public function calcularTotalesPresupuesto(Presupuesto $presupuesto): array
     {
-        // Se asume que el Presupuesto ya tiene cargada la relación 'detalles' o se usa 'fresh()' en el controlador.
-        // Sumamos la columna 'subtotal' de los detalles, que ya fueron calculados y guardados.
-        $subtotalCalculado = $presupuesto->detalles->sum('subtotal');
+        // subtotal bruto = cantidad * precio unitario, sin descuentos
+        $subtotalBruto = $presupuesto->detalles->sum(function ($detalle) {
+            return $detalle->cantidad * $detalle->precio_unitario;
+        });
 
-        // Lógica de impuestos/IVA (se deja simple sin impuestos por ahora)
-        $totalFinal = $subtotalCalculado;
+        // total neto = suma de subtotales de los detalles (ya con descuentos)
+        $totalNeto = $presupuesto->detalles->sum('subtotal');
 
         return [
-            'subtotal' => round($subtotalCalculado, 2),
-            'total' => round($totalFinal, 2)
+            'subtotal' => round($subtotalBruto, 2), // este se guarda como subtotal en DB
+            'total' => round($totalNeto, 2)         // este se guarda como total en DB
         ];
     }
 }

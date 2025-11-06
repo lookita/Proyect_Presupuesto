@@ -25,7 +25,7 @@
                     <div>
                         <p class="text-gray-600 font-medium">Fecha de Emisión:</p>
                         {{-- Usamos la fecha de emisión del presupuesto, no la de creación --}}
-                        <p class="font-semibold text-gray-900">{{ \Carbon\Carbon::parse($presupuesto->fecha_emision)->format('d/m/Y') }}</p>
+                        <p class="font-semibold text-gray-900">{{ \Carbon\Carbon::parse($presupuesto->fecha)->format('d/m/Y') }}</p>
                     </div>
                     <div>
                         <p class="text-gray-600 font-medium">Estado:</p>
