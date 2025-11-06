@@ -1,187 +1,188 @@
-<p align="center">
-  <a href="https://laravel.com" target="_blank">
-    <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo">
-  </a>
-</p>
+# Proyect_Presupuesto
 
-<p align="center">
-  <a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-  <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-  <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-  <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Descripción  
+**Proyect_Presupuesto** es un sistema desarrollado en **Laravel** para la gestión integral de presupuestos.  
+Permite administrar clientes, productos y presupuestos, con cálculo automático de totales, control de estados, exportación a PDF y un panel de indicadores.
+
+El objetivo principal es optimizar la creación, seguimiento y administración de presupuestos dentro de una organización.
 
 ---
 
-# 🧾 Sistema de Gestión de Presupuestos
-
-Proyecto académico desarrollado en Laravel con Livewire y Volt. Permite gestionar clientes, productos y presupuestos, con navegación adaptada por rol y lógica encapsulada en servicios reutilizables.
-
----
-<!-- DIA 15 -->
-## ⚙️ Requisitos técnicos
-
-- PHP >= 8.2  
-- Composer  
-- Laravel >= 10  
-- Node.js + Vite  
-- MySQL o PostgreSQL  
-- Extensiones: `pdo`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`
+## Características principales  
+- **Gestión de clientes:** alta, edición, baja y búsqueda de clientes.  
+- **Gestión de productos:** catálogo con código, descripción, precio y stock.  
+- **Gestión de presupuestos:**  
+  - Carga dinámica de ítems (producto, cantidad, precio, descuento).  
+  - Cálculo automático de subtotal, descuento y total.  
+  - Almacenamiento de precios históricos para consistencia.  
+- **Estados de presupuesto:** Pendiente → Aceptado/Rechazado → Facturado/Cancelado.  
+- **Exportación a PDF:** generación automática del documento con DomPDF.  
+- **Dashboard:** estadísticas de presupuestos, clientes y montos totales.  
+- **Autenticación y roles:** control de acceso con middleware (`auth`, `admin`).
 
 ---
 
-## 🚀 Pasos de instalación
+## Tecnologías utilizadas  
+- **Framework:** Laravel 10.x  
+- **Lenguaje:** PHP 8.x  
+- **Base de datos:** MySQL / MariaDB  
+- **Frontend:** Blade + TailwindCSS / Bootstrap  
+- **Generación de PDF:** `barryvdh/laravel-dompdf`  
+- **Control de autenticación:** Laravel Breeze / Jetstream  
+- **ORM:** Eloquent  
+- **Control de versiones:** Git  
 
-1. Clonar el repositorio:
+---
 
-   ```bash
-   git clone https://github.com/usuario/proyecto-presupuestos.git
-   cd proyecto-presupuestos
+## Instalación
 
-2. Instalar dependencias:
-
+### 1. Clonar el repositorio  
+```bash
+git clone https://github.com/lookita/Proyect_Presupuesto.git
+cd Proyect_Presupuesto
+```
+### 2. Instalar dependencias
+```bash
 composer install
-npm install && npm run dev
+npm install
+```
+### 3. Configurar variables de entorno
+Copia el archivo .env.example a .env y configura tus credenciales:
 
-3. Configurar .env:
+```bash
+cp .env.example
+```
+Edita las siguientes variables según tu entorno local:
 
-cp .env.example .env
+```
+APP_NAME="Proyect Presupuesto"
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://localhost
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=presupuestos
+DB_USERNAME=root
+DB_PASSWORD=
+```
+### 4. Generar la clave de la aplicación
+```
 php artisan key:generate
-
-4. Crear base de datos y migrar:
+```
+### 5. Migrar y poblar la base de datos
+```bash
 php artisan migrate --seed
+```
+Los seeders crean datos de prueba: clientes, productos y un usuario administrador.
 
-5. Iniciar servidor:
+### 6. Levantar el servidor local
+```bash
 php artisan serve
+```
+Visita en tu navegador:
+👉 http://localhost:8000
 
-## 🚀 Reinstalación en entorno nuevo 
-1. Clonar el repositorio
-2. Copiar `.env.example` a `.env`
-3. Configurar base de datos
-4. Ejecutar:
-   ```bash
-   composer install
-   npm install
-   php artisan migrate --seed
-   php artisan serve
+##  Roles y permisos
+### Rol	Permisos principales
 
-## Entrega Final
-Proyecto completo de gestión de presupuestos.
-Funcionalidades:
-- CRUD completo (Clientes, Productos, Presupuestos)
-- Relaciones entre entidades
-- Exportación PDF
-- Búsqueda, filtros y roles
+| Rol | Permisos Principales |
+| :--- | :--- |
+| **Administrador** | Crear, editar y eliminar clientes, productos y presupuestos. Acceso total al sistema. |
+| **Usuario estándar** | Crear presupuestos, visualizar clientes y productos. No puede eliminar registros. |
 
+Los roles se gestionan mediante middleware (isAdmin) y validaciones en las vistas Blade.
 
-<!-- Día 17 — Documentación técnica completa -->
-🧩 1. Modelos y relaciones
-📦 User
-Campos: id, name, email, password, role, created_at, updated_at
+## Estructura de carpetas
+```
+app/
+ ├── Http/
+ │    ├── Controllers/
+ │    │     ├── ClienteController.php
+ │    │     ├── ProductoController.php
+ │    │     ├── PresupuestoController.php
+ │    │     └── Auth/
+ │    └── Requests/
+ ├── Models/
+ │    ├── Cliente.php
+ │    ├── Producto.php
+ │    └── Presupuesto.php
+ └── Services/
+      └── PresupuestoService.php
+resources/
+ ├── views/
+ │    ├── clientes/
+ │    ├── productos/
+ │    ├── presupuestos/
+ │    └── dashboard.blade.php
+routes/
+ ├── web.php
+ └── api.php
+database/
+ ├── migrations/
+ ├── seeders/
+ └── factories/
+ ```
+## Funcionalidades clave
+#### Presupuestos
+- Carga de cliente, fecha, productos y descuentos. Cálculo de totales y descuentos.
+- Persistencia de precios históricos.
+- Eliminación en cascada de detalles al borrar un presupuesto.
 
-Relaciones:
+#### Clientes
+- Código autogenerado (CLI-YYYYMMDD-XXXX).
+- Validaciones en servidor y cliente.
+- CRUD completo.
 
-hasMany(Presupuesto) ← si se asocia presupuestos al usuario (opcional)
+#### Productos
+- Precio y stock administrables.
+- Control de uso en presupuestos históricos.
 
-Rol en el sistema:
+#### PDF
+- Plantilla en resources/views/presupuestos/pdf.blade.php.
+- Generación vía Barryvdh\DomPDF\Facade\Pdf.
 
-Controla acceso mediante auth() y auth()->user()->role
+## Dashboard
+- KPIs: número total de presupuestos, clientes y montos facturados.
 
-Determina qué enlaces se muestran en la navbar (Día 14)
+- Resumen de estados (pendientes, aceptados, rechazados).
 
-Protege rutas con middleware (Día 17)
+- Filtros rápidos por período o cliente.
 
-Campo role agregado en el Día 11 (admin o user)
+## Buenas prácticas
+- No eliminar registros con relaciones activas: usar softDeletes.
 
-📦 Cliente
-Campos: id, nombre, email, codigo, created_at, updated_at
+- Validar datos en FormRequest antes de guardar.
 
-Relaciones:
+- Mantener actualizados los seeders para ambientes de prueba.
 
-hasMany(Presupuesto)
+- Evitar exponer rutas sensibles: proteger con middleware.
 
-📦 Producto
-Campos: id, nombre, precio, codigo, created_at, updated_at
+- Controlar los cálculos tanto en JS (UX) como en backend (seguridad).
 
-Relaciones:
+## Comandos útiles
 
-hasMany(PresupuestoDetalle)
+| Acción | Comando |
+| :--- | :--- |
+| Ejecutar migraciones | `php artisan migrate` |
+| Ejecutar seeders | `php artisan db:seed` |
+| Limpiar caché | `php artisan optimize:clear` |
+| Generar clave de app | `php artisan key:generate` |
+| Levantar servidor local | `php artisan serve` |
+| Ejecutar tests | `php artisan test` |
 
-📦 Presupuesto
-Campos: id, cliente_id, fecha, estado, total, created_at, updated_at
+## Tests
+Para ejecutar los tests automáticos:
 
-Relaciones:
+```
+php artisan test
+```
+## Contribuciones
+Las contribuciones son bienvenidas:
 
-belongsTo(Cliente)
-
-hasMany(PresupuestoDetalle)
-
-Método addItem() para agregar detalles
-
-📦 PresupuestoDetalle
-Campos: id, presupuesto_id, producto_id, cantidad, precio_unitario, descuento_aplicado, subtotal
-
-Relaciones:
-
-belongsTo(Presupuesto)
-
-belongsTo(Producto)
-
-📊 Diagrama de relaciones
-Código
-User ──┐
-       │
-Cliente ───< Presupuesto ───< PresupuestoDetalle >─── Producto
-User controla acceso y navegación
-
-Cliente tiene muchos Presupuestos
-
-Cada Presupuesto tiene muchos Detalles
-
-Cada Detalle pertenece a un Producto
-
-🧠 2. Controladores y servicios
-🧾 Controladores
-ClienteController: CRUD de clientes, usa ClienteService para generar código (Día 14)
-
-ProductoController: CRUD de productos, validación con FormRequest (Día 13)
-
-PresupuestoController: CRUD de presupuestos, usa PresupuestoService para calcular total (Día 14)
-
-AuthController: login, logout, registro (si está presente)
-
-📦 Servicios
-ClienteService: método generarCodigo() para crear códigos únicos (Día 14)
-
-PresupuestoService: método calcularTotal() para sumar subtotales (Día 14)
-
-📊 Diagrama de flujo de servicios
-Código
-ClienteController ──> ClienteService ──> Código generado
-PresupuestoController ──> PresupuestoService ──> Total calculado
-🌐 3. Rutas y middleware
-📄 routes/web.php
-Route::resource('clientes', ClienteController::class)
-
-Route::resource('productos', ProductoController::class)
-
-Route::resource('presupuestos', PresupuestoController::class)
-
-Route::patch('presupuestos/{presupuesto}/estado', [PresupuestoController::class, 'actualizarEstado'])
-
-🛡️ Middleware
-auth: protege rutas privadas
-
-role:admin: restringe acceso a clientes y productos
-
-role:user: acceso limitado a presupuestos
-
-📊 Diagrama de navegación por rol
-Código
-[User]
- └── /presupuestos
-
-[Admin]
- ├── /clientes
- ├── /productos
- └── /presupuestos
+1. Realizá un **fork** del repositorio.
+2. Creá una rama (*feature/nueva-funcionalidad*).
+3. Hacé commit con un mensaje claro.
+4. Abrí un **Pull Request** explicando los cambios.
