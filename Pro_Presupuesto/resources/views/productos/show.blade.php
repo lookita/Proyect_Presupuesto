@@ -3,6 +3,7 @@
     <div class="py-12">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
+                <h1 class="text-3xl font-bold mb-4 text-gray-800">Detalle de Producto</h1>
 
                 <div class="mb-4">
                     <h3 class="text-lg font-medium text-gray-900">{{ $producto->nombre }}</h3>
